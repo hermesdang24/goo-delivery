@@ -137,26 +137,43 @@ const advantages = [
 function LogoImage({
   size = "md",
   priority = false,
+  surface = "light",
 }: {
   size?: "sm" | "md" | "lg" | "xl";
   priority?: boolean;
+  surface?: "light" | "dark";
 }) {
   const sizes = {
-    sm: "h-11 w-11",
-    md: "h-14 w-14",
-    lg: "h-28 w-28 sm:h-36 sm:w-36",
-    xl: "h-36 w-36 sm:h-44 sm:w-44 lg:h-52 lg:w-52",
+    sm: "h-10 w-28",
+    md: "h-12 w-36 sm:w-44",
+    lg: "h-24 w-72 sm:h-28 sm:w-80",
+    xl: "h-28 w-80 sm:h-36 sm:w-[28rem] lg:h-40 lg:w-[32rem]",
+  };
+
+  const scales = {
+    sm: "scale-[1.85]",
+    md: "scale-[1.75]",
+    lg: "scale-[1.5]",
+    xl: "scale-[1.42]",
   };
 
   return (
-    <Image
-      src={logoSrc}
-      alt="Logo officiel GOO Delivery"
-      width={1254}
-      height={1254}
-      priority={priority}
-      className={`${sizes[size]} rounded-full object-contain`}
-    />
+    <div
+      className={`relative overflow-hidden ${sizes[size]} ${
+        surface === "dark"
+          ? "rounded-lg bg-white/95 shadow-2xl shadow-black/30 ring-1 ring-white/10"
+          : ""
+      }`}
+    >
+      <Image
+        src={logoSrc}
+        alt="Logo officiel GOO Delivery"
+        fill
+        priority={priority}
+        sizes="(min-width: 1024px) 512px, 320px"
+        className={`object-contain mix-blend-multiply ${scales[size]}`}
+      />
+    </div>
   );
 }
 
@@ -298,7 +315,7 @@ function CampaignPanel() {
     <section id="campagne" className="bg-black px-5 py-20 text-white sm:px-8 lg:py-24">
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
-          <LogoImage size="xl" priority />
+          <LogoImage size="lg" priority surface="dark" />
           <p className="mt-8 text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
             Campagne GOO Delivery
           </p>
@@ -525,7 +542,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
           <a href="#accueil" className="flex items-center gap-3" aria-label="GOO Delivery">
-            <LogoImage size="md" priority />
+            <LogoImage size="sm" priority />
             <span className="hidden text-lg font-black tracking-tight sm:inline">
               GOO <span className="text-[#22c55e]">Delivery</span>
             </span>
@@ -548,7 +565,7 @@ export default function Home() {
       <section className="overflow-hidden bg-[linear-gradient(135deg,#ffffff_0%,#f4f4f5_45%,#0a0a0a_45%,#0a0a0a_100%)] px-5 py-14 sm:px-8 lg:py-20">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.94fr_1.06fr] lg:items-center">
           <div>
-            <LogoImage size="xl" priority />
+            <LogoImage size="lg" priority />
             <p className="mt-8 text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
               Plus rapide. Plus simple. Toujours là.
             </p>
