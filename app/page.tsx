@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useState, type FormEvent } from "react";
 
 const logoSrc = "/logo.png";
 const whatsappNumber = "+237 695 502 710";
@@ -8,6 +11,19 @@ const email = "goodeleveries237@gmail.com";
 
 type IconProps = {
   className?: string;
+};
+
+type AuthMode = "signup" | "login";
+type AuthMethod = "email" | "phone";
+type AuthStep = "details" | "verify" | "success";
+
+type AccountForm = {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  city: string;
+  identifier: string;
+  paymentMethod: string;
 };
 
 const navLinks = [
@@ -21,7 +37,7 @@ const navLinks = [
 const stats = [
   { value: "6", label: "services clés" },
   { value: "3", label: "moyens de livraison" },
-  { value: "7j/7", label: "support WhatsApp" },
+  { value: "2FA", label: "compte sécurisé" },
 ];
 
 const services = [
@@ -133,6 +149,18 @@ const advantages = [
     description: "Une image premium adaptée aux particuliers, partenaires et entreprises.",
   },
 ];
+
+const paymentMethods = ["Orange Money", "MTN Mobile Money", "Espèces à la livraison"];
+const demoOtp = "248619";
+
+const defaultForm: AccountForm = {
+  firstName: "",
+  lastName: "",
+  birthDate: "",
+  city: "",
+  identifier: "",
+  paymentMethod: "Orange Money",
+};
 
 function LogoImage({
   size = "md",
@@ -247,6 +275,319 @@ function SecondaryButton({ children, href }: { children: React.ReactNode; href: 
     >
       {children}
     </a>
+  );
+}
+
+function AccountAccess({ compact = false }: { compact?: boolean }) {
+  const [authMode, setAuthMode] = useState<AuthMode>("signup");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
+  const [authStep, setAuthStep] = useState<AuthStep>("details");
+  const [form, setForm] = useState<AccountForm>(defaultForm);
+  const [otp, setOtp] = useState("");
+  const [locationStatus, setLocationStatus] = useState(
+    "Ville détectée automatiquement si vous l’autorisez.",
+  );
+  const [formMessage, setFormMessage] = useState("");
+
+  const isSignup = authMode === "signup";
+  const identifierLabel = authMethod === "phone" ? "Numéro camerounais" : "Adresse email";
+  const identifierPlaceholder = authMethod === "phone" ? "+237 6XX XXX XXX" : "exemple@email.com";
+
+  function updateField(field: keyof AccountForm, value: string) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function switchMode(mode: AuthMode) {
+    setAuthMode(mode);
+    setAuthStep("details");
+    setOtp("");
+    setFormMessage("");
+  }
+
+  function switchMethod(method: AuthMethod) {
+    setAuthMethod(method);
+    setOtp("");
+    setFormMessage("");
+  }
+
+  async function detectLocation() {
+    if (!("geolocation" in navigator)) {
+      setLocationStatus("La géolocalisation n’est pas disponible sur ce navigateur.");
+      return;
+    }
+
+    setLocationStatus("Détection de votre position en cours...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+          );
+          const data = (await response.json()) as {
+            address?: {
+              city?: string;
+              town?: string;
+              village?: string;
+              state?: string;
+              country?: string;
+            };
+          };
+          const city =
+            data.address?.city ??
+            data.address?.town ??
+            data.address?.village ??
+            data.address?.state ??
+            "Position détectée";
+          const country = data.address?.country ? `, ${data.address.country}` : "";
+
+          updateField("city", `${city}${country}`);
+          setLocationStatus("Ville détectée. Vous pouvez la modifier si besoin.");
+        } catch {
+          updateField("city", `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+          setLocationStatus("Position détectée, mais la ville n’a pas pu être convertie automatiquement.");
+        }
+      },
+      () => {
+        setLocationStatus("Autorisez la localisation ou renseignez votre ville manuellement.");
+      },
+      { enableHighAccuracy: true, timeout: 9000, maximumAge: 60000 },
+    );
+  }
+
+  function submitDetails(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormMessage("");
+
+    if (!form.identifier.trim()) {
+      setFormMessage(`Entrez votre ${identifierLabel.toLowerCase()} pour continuer.`);
+      return;
+    }
+
+    if (authMethod === "phone" && !/^((\+237|237)?\s?6|6)\d[\d\s]{7,}$/.test(form.identifier.trim())) {
+      setFormMessage("Entrez un numéro camerounais valide, par exemple +237 695 502 710.");
+      return;
+    }
+
+    if (isSignup && (!form.firstName || !form.lastName || !form.birthDate || !form.city)) {
+      setFormMessage("Complétez votre nom, prénom, date de naissance et ville avant la vérification.");
+      return;
+    }
+
+    setAuthStep("verify");
+    setFormMessage(
+      authMethod === "phone"
+        ? `Code de vérification envoyé au ${form.identifier}. Code démo : ${demoOtp}`
+        : `Code de vérification envoyé à ${form.identifier}. Code démo : ${demoOtp}`,
+    );
+  }
+
+  function verifyAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (otp.trim() !== demoOtp) {
+      setFormMessage(`Code incorrect pour la démo. Utilisez ${demoOtp}.`);
+      return;
+    }
+
+    setAuthStep("success");
+    setFormMessage(
+      isSignup
+        ? "Compte GOO Delivery créé. Le backend pourra ensuite enregistrer le client et activer la vraie double authentification."
+        : "Connexion réussie. Le backend pourra ensuite ouvrir la session sécurisée du client.",
+    );
+  }
+
+  return (
+    <div className={`rounded-lg border border-zinc-200 bg-white p-5 shadow-xl shadow-zinc-200 ${compact ? "w-full" : ""}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22c55e]">
+            Compte client
+          </p>
+          <h3 className="mt-2 text-2xl font-black">{isSignup ? "Créer un compte" : "Se connecter"}</h3>
+        </div>
+        <span className="rounded-full bg-black px-3 py-1 text-xs font-black text-white">2FA</span>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 rounded-full bg-zinc-100 p-1 text-sm font-black">
+        <button
+          type="button"
+          onClick={() => switchMode("signup")}
+          className={`rounded-full px-4 py-2 transition ${isSignup ? "bg-black text-white" : "text-zinc-600"}`}
+        >
+          Inscription
+        </button>
+        <button
+          type="button"
+          onClick={() => switchMode("login")}
+          className={`rounded-full px-4 py-2 transition ${!isSignup ? "bg-black text-white" : "text-zinc-600"}`}
+        >
+          Connexion
+        </button>
+      </div>
+
+      {authStep === "details" ? (
+        <form onSubmit={submitDetails} className="mt-5 grid gap-4">
+          <div className="grid grid-cols-2 gap-2 rounded-lg border border-zinc-200 p-1 text-sm font-black">
+            <button
+              type="button"
+              onClick={() => switchMethod("phone")}
+              className={`rounded-md px-3 py-2 transition ${authMethod === "phone" ? "bg-[#22c55e] text-black" : "text-zinc-600"}`}
+            >
+              Téléphone
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMethod("email")}
+              className={`rounded-md px-3 py-2 transition ${authMethod === "email" ? "bg-[#22c55e] text-black" : "text-zinc-600"}`}
+            >
+              Email
+            </button>
+          </div>
+
+          <label className="grid gap-2 text-sm font-bold text-zinc-700">
+            {identifierLabel}
+            <input
+              value={form.identifier}
+              onChange={(event) => updateField("identifier", event.target.value)}
+              type={authMethod === "email" ? "email" : "tel"}
+              placeholder={identifierPlaceholder}
+              className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
+            />
+          </label>
+
+          {isSignup ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-bold text-zinc-700">
+                  Prénom
+                  <input
+                    value={form.firstName}
+                    onChange={(event) => updateField("firstName", event.target.value)}
+                    className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
+                    placeholder="Votre prénom"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-bold text-zinc-700">
+                  Nom
+                  <input
+                    value={form.lastName}
+                    onChange={(event) => updateField("lastName", event.target.value)}
+                    className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
+                    placeholder="Votre nom"
+                  />
+                </label>
+              </div>
+
+              <label className="grid gap-2 text-sm font-bold text-zinc-700">
+                Date de naissance
+                <input
+                  value={form.birthDate}
+                  onChange={(event) => updateField("birthDate", event.target.value)}
+                  type="date"
+                  className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
+                />
+              </label>
+
+              <div className="grid gap-2">
+                <label className="grid gap-2 text-sm font-bold text-zinc-700">
+                  Ville / localisation
+                  <input
+                    value={form.city}
+                    onChange={(event) => updateField("city", event.target.value)}
+                    className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
+                    placeholder="Douala, Yaoundé, Bafoussam..."
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={detectLocation}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 px-4 py-3 text-sm font-black transition hover:border-[#22c55e] hover:text-[#22c55e]"
+                >
+                  <PinIcon className="h-4 w-4" />
+                  Détecter ma ville automatiquement
+                </button>
+                <p className="text-xs font-medium text-zinc-500">{locationStatus}</p>
+              </div>
+
+              <label className="grid gap-2 text-sm font-bold text-zinc-700">
+                Moyen de paiement préféré
+                <select
+                  value={form.paymentMethod}
+                  onChange={(event) => updateField("paymentMethod", event.target.value)}
+                  className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
+                >
+                  {paymentMethods.map((method) => (
+                    <option key={method}>{method}</option>
+                  ))}
+                </select>
+              </label>
+            </>
+          ) : null}
+
+          {formMessage ? <p className="rounded-lg bg-zinc-100 p-3 text-sm font-semibold text-zinc-700">{formMessage}</p> : null}
+
+          <button
+            type="submit"
+            className="rounded-full bg-[#22c55e] px-6 py-4 font-black text-black transition hover:-translate-y-0.5 hover:bg-green-400"
+          >
+            Continuer avec la double authentification
+          </button>
+        </form>
+      ) : null}
+
+      {authStep === "verify" ? (
+        <form onSubmit={verifyAccount} className="mt-5 grid gap-4">
+          <div className="rounded-lg bg-black p-4 text-white">
+            <p className="text-sm font-black text-[#22c55e]">Double authentification</p>
+            <p className="mt-2 text-sm text-zinc-300">
+              Entrez le code à 6 chiffres reçu par {authMethod === "phone" ? "SMS" : "email"}. Démo : {demoOtp}
+            </p>
+          </div>
+          <input
+            value={otp}
+            onChange={(event) => setOtp(event.target.value)}
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="000000"
+            className="rounded-lg border border-zinc-200 px-4 py-4 text-center text-2xl font-black tracking-[0.35em] outline-none transition focus:border-[#22c55e]"
+          />
+          {formMessage ? <p className="rounded-lg bg-zinc-100 p-3 text-sm font-semibold text-zinc-700">{formMessage}</p> : null}
+          <button
+            type="submit"
+            className="rounded-full bg-black px-6 py-4 font-black text-white transition hover:-translate-y-0.5 hover:bg-zinc-900"
+          >
+            Vérifier et continuer
+          </button>
+          <button
+            type="button"
+            onClick={() => setAuthStep("details")}
+            className="text-sm font-black text-zinc-500 transition hover:text-[#22c55e]"
+          >
+            Modifier mes informations
+          </button>
+        </form>
+      ) : null}
+
+      {authStep === "success" ? (
+        <div className="mt-5 rounded-lg bg-[#22c55e] p-5 text-black">
+          <CheckIcon className="h-8 w-8" />
+          <h4 className="mt-4 text-2xl font-black">Accès sécurisé</h4>
+          <p className="mt-2 font-semibold">{formMessage}</p>
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex rounded-full bg-black px-5 py-3 text-sm font-black text-white"
+          >
+            Commander maintenant
+          </a>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -556,9 +897,20 @@ export default function Home() {
             ))}
           </div>
 
-          <PrimaryButton href={whatsappUrl} dark>
-            Commander
-          </PrimaryButton>
+          <div className="hidden items-center gap-3 md:flex">
+            <a
+              href="#compte"
+              className="rounded-full border border-zinc-300 px-5 py-3 text-sm font-black transition hover:border-[#22c55e] hover:text-[#22c55e]"
+            >
+              Connexion
+            </a>
+            <a
+              href="#compte"
+              className="rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black"
+            >
+              Créer un compte
+            </a>
+          </div>
         </div>
       </nav>
 
@@ -570,16 +922,16 @@ export default function Home() {
               Plus rapide. Plus simple. Toujours là.
             </p>
             <h1 className="mt-4 max-w-3xl text-5xl font-black leading-none tracking-tight sm:text-6xl lg:text-7xl">
-              La livraison moderne pour le Cameroun.
+              Livraison, compte client et suivi sécurisé.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-700">
               GOO Delivery connecte clients, livreurs, restaurants, boutiques et
-              entreprises avec un service rapide, fiable et professionnel.
+              entreprises avec un service rapide, fiable et professionnel au Cameroun.
             </p>
 
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
               <PrimaryButton href={whatsappUrl}>Commander sur WhatsApp</PrimaryButton>
-              <SecondaryButton href="#services">Voir les services</SecondaryButton>
+              <SecondaryButton href="#compte">Créer un compte</SecondaryButton>
             </div>
 
             <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
@@ -592,7 +944,46 @@ export default function Home() {
             </div>
           </div>
 
-          <DeliveryDashboard />
+          <div className="grid gap-5">
+            <AccountAccess />
+            <DeliveryDashboard />
+          </div>
+        </div>
+      </section>
+
+      <section id="compte" className="bg-zinc-50 px-5 py-20 sm:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
+              Accès client
+            </p>
+            <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
+              Inscription, connexion et double authentification.
+            </h2>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-600">
+              Le parcours prépare GOO Delivery à gérer des comptes clients avec email ou
+              numéro camerounais, localisation, profil personnel et moyen de paiement préféré.
+            </p>
+
+            <div className="mt-8 grid gap-4">
+              {[
+                "Email ou numéro camerounais",
+                "Code 2FA par email ou SMS",
+                "Nom, prénom et date de naissance",
+                "Ville détectée automatiquement",
+                "Orange Money et MTN Mobile Money",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-[#22c55e] text-black">
+                    <CheckIcon />
+                  </span>
+                  <p className="font-black">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <AccountAccess compact />
         </div>
       </section>
 
