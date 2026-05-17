@@ -26,6 +26,34 @@ type AccountForm = {
   paymentMethod: string;
 };
 
+type RestaurantCategory = "Tous" | "Fast-food" | "Restaurants" | "Chinois" | "Camerounais" | "Cafés" | "Pizza";
+
+type MenuItem = {
+  name: string;
+  price: number;
+};
+
+type Restaurant = {
+  name: string;
+  category: Exclude<RestaurantCategory, "Tous">;
+  area: string;
+  address: string;
+  rating: number;
+  deliveryTime: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  tags: string[];
+  imageUrl: string;
+  menu: MenuItem[];
+};
+
+type ClientLocation = {
+  lat: number;
+  lng: number;
+};
+
 const navLinks = [
   { label: "Accueil", href: "#accueil" },
   { label: "Services", href: "#services" },
@@ -37,7 +65,7 @@ const navLinks = [
 const stats = [
   { value: "6", label: "services clés" },
   { value: "3", label: "moyens de livraison" },
-  { value: "2FA", label: "compte sécurisé" },
+  { value: "Compte", label: "client sécurisé" },
 ];
 
 const services = [
@@ -162,6 +190,291 @@ const defaultForm: AccountForm = {
   paymentMethod: "Orange Money",
 };
 
+const restaurantCategories: RestaurantCategory[] = [
+  "Tous",
+  "Fast-food",
+  "Restaurants",
+  "Chinois",
+  "Camerounais",
+  "Cafés",
+  "Pizza",
+];
+
+const restaurants: Restaurant[] = [
+  {
+    name: "Gosto Resto-Café",
+    category: "Fast-food",
+    area: "Bonamousadi",
+    address: "Rond Point Maetur, Station Ola",
+    rating: 4.7,
+    deliveryTime: "25-40 min",
+    coordinates: { lat: 4.0908, lng: 9.7437 },
+    tags: ["Burgers", "Shawarma", "Milk-shakes"],
+    imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Burger américain viande", price: 3500 },
+      { name: "Shawarma poulet", price: 2500 },
+      { name: "Pizza familiale", price: 10000 },
+      { name: "Milk-shake vanille", price: 2500 },
+    ],
+  },
+  {
+    name: "Restaurant Bantou",
+    category: "Camerounais",
+    area: "Makepe",
+    address: "Makepe DHL",
+    rating: 4.6,
+    deliveryTime: "30-45 min",
+    coordinates: { lat: 4.0835, lng: 9.7425 },
+    tags: ["Terroir", "Grillades", "Fast-food"],
+    imageUrl: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Poulet braisé", price: 3500 },
+      { name: "Ndolé plantain", price: 4500 },
+      { name: "Poisson braisé", price: 6500 },
+      { name: "Frites de plantain", price: 1500 },
+    ],
+  },
+  {
+    name: "Le Paradise",
+    category: "Restaurants",
+    area: "Bonapriso",
+    address: "Rue Tokoto",
+    rating: 4.4,
+    deliveryTime: "30-50 min",
+    coordinates: { lat: 4.0268, lng: 9.7047 },
+    tags: ["Pizza", "Poisson", "Terrasse"],
+    imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Pizza reine", price: 7000 },
+      { name: "Crevettes grillées", price: 9000 },
+      { name: "Filet de poisson", price: 8500 },
+      { name: "Salade maison", price: 3500 },
+    ],
+  },
+  {
+    name: "Shania Café Resto",
+    category: "Cafés",
+    area: "Bonabéri",
+    address: "Marché Tanko",
+    rating: 4.5,
+    deliveryTime: "35-55 min",
+    coordinates: { lat: 4.0859, lng: 9.6684 },
+    tags: ["Petit déjeuner", "Café", "Cuisine locale"],
+    imageUrl: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Omelette", price: 500 },
+      { name: "Thé", price: 500 },
+      { name: "Salade végétale", price: 2500 },
+      { name: "Riz sauce tomate", price: 3000 },
+    ],
+  },
+  {
+    name: "GTF Resto",
+    category: "Restaurants",
+    area: "Borne 10",
+    address: "Face Hôtel Porte Maillot",
+    rating: 4.3,
+    deliveryTime: "35-55 min",
+    coordinates: { lat: 4.0612, lng: 9.7835 },
+    tags: ["Cuisine variée", "Lunch", "Famille"],
+    imageUrl: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Riz sauté poulet", price: 3500 },
+      { name: "Poulet DG", price: 5000 },
+      { name: "Poisson sauce", price: 6000 },
+      { name: "Jus naturel", price: 1500 },
+    ],
+  },
+  {
+    name: "Tom Burger",
+    category: "Fast-food",
+    area: "Douala",
+    address: "Snack bar restaurant",
+    rating: 4.2,
+    deliveryTime: "25-40 min",
+    coordinates: { lat: 4.0471, lng: 9.7064 },
+    tags: ["Burgers", "Poulet", "Frites"],
+    imageUrl: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Burger classique", price: 3000 },
+      { name: "Burger double", price: 4500 },
+      { name: "Poulet frites", price: 4000 },
+      { name: "Glace", price: 1500 },
+    ],
+  },
+  {
+    name: "Asian Bowl Douala",
+    category: "Chinois",
+    area: "Bonapriso",
+    address: "Zone Akwa Palace - Bonapriso",
+    rating: 4.5,
+    deliveryTime: "30-45 min",
+    coordinates: { lat: 4.0309, lng: 9.6999 },
+    tags: ["Nouilles", "Riz cantonais", "Poulet"],
+    imageUrl: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Riz cantonais poulet", price: 4500 },
+      { name: "Nouilles sautées bœuf", price: 5000 },
+      { name: "Poulet aigre-doux", price: 5500 },
+      { name: "Nems légumes", price: 2500 },
+    ],
+  },
+  {
+    name: "Pizza Loving Hut",
+    category: "Pizza",
+    area: "Douala",
+    address: "Centre-ville",
+    rating: 4.6,
+    deliveryTime: "30-50 min",
+    coordinates: { lat: 4.0511, lng: 9.7679 },
+    tags: ["Pizza", "Vegan", "International"],
+    imageUrl: "https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Pizza végétarienne", price: 6500 },
+      { name: "Pizza fromage", price: 6000 },
+      { name: "Pizza champignons", price: 7000 },
+      { name: "Jus frais", price: 1500 },
+    ],
+  },
+  {
+    name: "Tchop & Yamo Bonamoussadi",
+    category: "Fast-food",
+    area: "Bonamoussadi",
+    address: "Bonamoussadi avant JC",
+    rating: 4.4,
+    deliveryTime: "20-35 min",
+    coordinates: { lat: 4.0937, lng: 9.7429 },
+    tags: ["Afro fast-food", "Beignets", "Jus naturel"],
+    imageUrl: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Beignets haricots bouillie", price: 1500 },
+      { name: "Ndogmangolo soya poulet", price: 2000 },
+      { name: "Salade Bitchakala", price: 2500 },
+      { name: "Jus Yamo ananas", price: 1500 },
+    ],
+  },
+  {
+    name: "Les Cèdres Bonamoussadi",
+    category: "Pizza",
+    area: "Bonamoussadi",
+    address: "Bonamoussadi, Douala",
+    rating: 4.5,
+    deliveryTime: "25-45 min",
+    coordinates: { lat: 4.0897, lng: 9.7445 },
+    tags: ["Pizza", "Smoothies", "Jus"],
+    imageUrl: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Pizza margherita", price: 5500 },
+      { name: "Pizza poulet", price: 7000 },
+      { name: "Smoothie fruits", price: 2500 },
+      { name: "Jus de fruits", price: 1500 },
+    ],
+  },
+  {
+    name: "Le Glacier Moderne",
+    category: "Cafés",
+    area: "Bonamoussadi",
+    address: "3PQP+373, Bonamoussadi",
+    rating: 4.1,
+    deliveryTime: "20-35 min",
+    coordinates: { lat: 4.0884, lng: 9.7356 },
+    tags: ["Glaces", "Jus", "Desserts"],
+    imageUrl: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Glace 2 boules", price: 2000 },
+      { name: "Milk-shake", price: 2500 },
+      { name: "Jus de carotte", price: 1500 },
+      { name: "Gaufre chocolat", price: 3000 },
+    ],
+  },
+  {
+    name: "White House Restaurant",
+    category: "Restaurants",
+    area: "Bonamoussadi",
+    address: "Bonamoussadi, Douala",
+    rating: 4.3,
+    deliveryTime: "30-50 min",
+    coordinates: { lat: 4.0918, lng: 9.7466 },
+    tags: ["Grillades", "Cuisine variée", "Afterwork"],
+    imageUrl: "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Brochettes de bœuf", price: 3500 },
+      { name: "Poulet braisé", price: 4500 },
+      { name: "Riz sauté", price: 3000 },
+      { name: "Poisson grillé", price: 7000 },
+    ],
+  },
+  {
+    name: "African Food by Emy",
+    category: "Camerounais",
+    area: "Bonamoussadi",
+    address: "Bonamoussadi, Douala",
+    rating: 4.6,
+    deliveryTime: "30-50 min",
+    coordinates: { lat: 4.0958, lng: 9.7421 },
+    tags: ["Cuisine africaine", "Sauces", "Livraison"],
+    imageUrl: "https://images.unsplash.com/photo-1617692855027-33b14f061079?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Eru water fufu", price: 4500 },
+      { name: "Okok sucré", price: 3500 },
+      { name: "Ndolé viande", price: 5000 },
+      { name: "Koki plantain", price: 3000 },
+    ],
+  },
+  {
+    name: "Restaurant À La Porte Jaune",
+    category: "Camerounais",
+    area: "Bonamoussadi",
+    address: "Bloc Sonel, face Yoro Joss",
+    rating: 4.5,
+    deliveryTime: "35-55 min",
+    coordinates: { lat: 4.0891, lng: 9.7527 },
+    tags: ["Traditionnel", "Salle banquet", "Grillades"],
+    imageUrl: "https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Mbongo tchobi", price: 6000 },
+      { name: "Achu yellow soup", price: 4500 },
+      { name: "Sauce gombo", price: 3500 },
+      { name: "Plantain mûr", price: 1500 },
+    ],
+  },
+  {
+    name: "Friends Food Bonamoussadi",
+    category: "Fast-food",
+    area: "Bonamoussadi",
+    address: "Rue école publique",
+    rating: 4.2,
+    deliveryTime: "25-40 min",
+    coordinates: { lat: 4.0922, lng: 9.7388 },
+    tags: ["Portions généreuses", "Poulet", "Frites"],
+    imageUrl: "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Poulet pané frites", price: 3500 },
+      { name: "Burger maison", price: 3000 },
+      { name: "Shawarma mixte", price: 2500 },
+      { name: "Jus naturel", price: 1200 },
+    ],
+  },
+  {
+    name: "O'SAN",
+    category: "Restaurants",
+    area: "Bonamoussadi",
+    address: "5.n137 Bonamoussadi",
+    rating: 4.4,
+    deliveryTime: "35-55 min",
+    coordinates: { lat: 4.0949, lng: 9.7495 },
+    tags: ["Wine bar", "Restaurant", "Premium"],
+    imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",
+    menu: [
+      { name: "Assiette tapas", price: 6500 },
+      { name: "Pâtes crème poulet", price: 7000 },
+      { name: "Filet de bœuf", price: 12000 },
+      { name: "Mocktail maison", price: 3000 },
+    ],
+  },
+];
+
 function LogoImage({
   size = "md",
   priority = false,
@@ -278,6 +591,179 @@ function SecondaryButton({ children, href }: { children: React.ReactNode; href: 
   );
 }
 
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("fr-CM").format(price) + " FCFA";
+}
+
+function getDistanceKm(origin: ClientLocation, destination: Restaurant["coordinates"]) {
+  const radius = 6371;
+  const dLat = ((destination.lat - origin.lat) * Math.PI) / 180;
+  const dLng = ((destination.lng - origin.lng) * Math.PI) / 180;
+  const lat1 = (origin.lat * Math.PI) / 180;
+  const lat2 = (destination.lat * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function RestaurantMarketplace() {
+  const [selectedCategory, setSelectedCategory] = useState<RestaurantCategory>("Tous");
+  const [clientLocation, setClientLocation] = useState<ClientLocation | null>(null);
+  const [locationMessage, setLocationMessage] = useState(
+    "Activez votre localisation pour voir les restaurants les plus proches.",
+  );
+
+  const filteredRestaurants = restaurants
+    .filter((restaurant) => selectedCategory === "Tous" || restaurant.category === selectedCategory)
+    .map((restaurant) => ({
+      ...restaurant,
+      distance: clientLocation ? getDistanceKm(clientLocation, restaurant.coordinates) : null,
+    }))
+    .sort((first, second) => {
+      if (first.distance === null || second.distance === null) return 0;
+      return first.distance - second.distance;
+    });
+
+  function detectClientLocation() {
+    if (!("geolocation" in navigator)) {
+      setLocationMessage("La localisation n’est pas disponible sur ce navigateur.");
+      return;
+    }
+
+    setLocationMessage("Recherche de votre position...");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setClientLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocationMessage("Distance estimée depuis votre position actuelle.");
+      },
+      () => {
+        setLocationMessage("Localisation refusée. Les quartiers restent visibles.");
+      },
+      { enableHighAccuracy: true, timeout: 9000, maximumAge: 60000 },
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-200">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
+            Restaurants à Douala
+          </p>
+          <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+            Menus disponibles maintenant.
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-600">
+            Explorez les restaurants, fast-foods, cafés et cuisines chinoises. Les distances
+            s’ajustent si vous autorisez la localisation.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={detectClientLocation}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black"
+        >
+          <PinIcon className="h-4 w-4" />
+          Utiliser ma position
+        </button>
+      </div>
+
+      <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
+        {restaurantCategories.map((category) => (
+          <button
+            key={category}
+            type="button"
+            onClick={() => setSelectedCategory(category)}
+            className={`shrink-0 rounded-full px-4 py-2 text-sm font-black transition ${
+              selectedCategory === category
+                ? "bg-[#22c55e] text-black"
+                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-2 text-xs font-semibold text-zinc-500">{locationMessage}</p>
+
+      <div className="mt-6 grid max-h-[660px] gap-4 overflow-y-auto pr-1">
+        {filteredRestaurants.map((restaurant) => (
+          <article
+            key={restaurant.name}
+            className="rounded-lg border border-zinc-200 p-4 transition hover:border-[#22c55e] hover:shadow-lg"
+          >
+            <div className="relative mb-4 h-48 overflow-hidden rounded-lg bg-zinc-100">
+              <div
+                aria-label={`Photo de ${restaurant.name}`}
+                className="absolute inset-0 bg-cover bg-center transition duration-500 hover:scale-105"
+                style={{ backgroundImage: `url(${restaurant.imageUrl})` }}
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                <p className="text-sm font-black text-white">{restaurant.tags[0]}</p>
+                <p className="mt-1 text-xs font-semibold text-white/75">Photo illustrative du menu</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-2xl font-black">{restaurant.name}</h3>
+                  <span className="rounded-full bg-[#22c55e]/15 px-3 py-1 text-xs font-black text-[#15803d]">
+                    {restaurant.category}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-zinc-600">
+                  {restaurant.area} • {restaurant.address}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {restaurant.tags.map((tag) => (
+                    <span key={tag} className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-black px-4 py-3 text-white sm:text-right">
+                <p className="text-sm font-black text-[#22c55e]">★ {restaurant.rating}</p>
+                <p className="mt-1 text-sm font-bold">{restaurant.deliveryTime}</p>
+                <p className="mt-1 text-sm font-bold">
+                  {restaurant.distance === null ? restaurant.area : `${restaurant.distance.toFixed(1)} km`}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {restaurant.menu.map((item) => (
+                <div key={item.name} className="flex items-center justify-between gap-3 rounded-lg bg-zinc-50 px-4 py-3">
+                  <p className="text-sm font-black">{item.name}</p>
+                  <p className="shrink-0 text-sm font-black text-[#16a34a]">{formatPrice(item.price)}</p>
+                </div>
+              ))}
+            </div>
+
+            <a
+              href={`${whatsappUrl}%20Restaurant%20:%20${encodeURIComponent(restaurant.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#22c55e] px-5 py-3 text-sm font-black text-black transition hover:bg-green-400"
+            >
+              Commander chez {restaurant.name}
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function AccountAccess({ compact = false }: { compact?: boolean }) {
   const [authMode, setAuthMode] = useState<AuthMode>("signup");
   const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
@@ -290,7 +776,7 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
   const [formMessage, setFormMessage] = useState("");
 
   const isSignup = authMode === "signup";
-  const identifierLabel = authMethod === "phone" ? "Numéro camerounais" : "Adresse email";
+  const identifierLabel = authMethod === "phone" ? "Numéro de téléphone" : "Adresse email";
   const identifierPlaceholder = authMethod === "phone" ? "+237 6XX XXX XXX" : "exemple@email.com";
 
   function updateField(field: keyof AccountForm, value: string) {
@@ -367,7 +853,7 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
     }
 
     if (authMethod === "phone" && !/^((\+237|237)?\s?6|6)\d[\d\s]{7,}$/.test(form.identifier.trim())) {
-      setFormMessage("Entrez un numéro camerounais valide, par exemple +237 695 502 710.");
+      setFormMessage("Entrez un numéro de téléphone valide, par exemple +237 695 502 710.");
       return;
     }
 
@@ -379,8 +865,8 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
     setAuthStep("verify");
     setFormMessage(
       authMethod === "phone"
-        ? `Code de vérification envoyé au ${form.identifier}. Code démo : ${demoOtp}`
-        : `Code de vérification envoyé à ${form.identifier}. Code démo : ${demoOtp}`,
+        ? `Code envoyé au ${form.identifier}. Code démo : ${demoOtp}`
+        : `Code envoyé à ${form.identifier}. Code démo : ${demoOtp}`,
     );
   }
 
@@ -395,8 +881,8 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
     setAuthStep("success");
     setFormMessage(
       isSignup
-        ? "Compte GOO Delivery créé. Le backend pourra ensuite enregistrer le client et activer la vraie double authentification."
-        : "Connexion réussie. Le backend pourra ensuite ouvrir la session sécurisée du client.",
+        ? "Compte GOO Delivery créé. Vous pouvez maintenant commander plus rapidement."
+        : "Connexion réussie. Vous pouvez continuer votre commande.",
     );
   }
 
@@ -409,7 +895,7 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
           </p>
           <h3 className="mt-2 text-2xl font-black">{isSignup ? "Créer un compte" : "Se connecter"}</h3>
         </div>
-        <span className="rounded-full bg-black px-3 py-1 text-xs font-black text-white">2FA</span>
+        <span className="rounded-full bg-black px-3 py-1 text-xs font-black text-white">Client</span>
       </div>
 
       <div className="mt-5 grid grid-cols-2 rounded-full bg-zinc-100 p-1 text-sm font-black">
@@ -534,7 +1020,7 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
             type="submit"
             className="rounded-full bg-[#22c55e] px-6 py-4 font-black text-black transition hover:-translate-y-0.5 hover:bg-green-400"
           >
-            Continuer avec la double authentification
+            {isSignup ? "S’inscrire" : "Se connecter"}
           </button>
         </form>
       ) : null}
@@ -542,7 +1028,7 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
       {authStep === "verify" ? (
         <form onSubmit={verifyAccount} className="mt-5 grid gap-4">
           <div className="rounded-lg bg-black p-4 text-white">
-            <p className="text-sm font-black text-[#22c55e]">Double authentification</p>
+            <p className="text-sm font-black text-[#22c55e]">Vérification</p>
             <p className="mt-2 text-sm text-zinc-300">
               Entrez le code à 6 chiffres reçu par {authMethod === "phone" ? "SMS" : "email"}. Démo : {demoOtp}
             </p>
@@ -587,66 +1073,6 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
           </a>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function DeliveryDashboard() {
-  return (
-    <div className="relative">
-      <div className="absolute inset-x-8 top-6 h-32 bg-[#22c55e]/25 blur-3xl" />
-      <div className="relative overflow-hidden rounded-lg border border-white/10 bg-zinc-950 p-4 shadow-2xl shadow-black/50">
-        <div className="rounded-lg bg-white p-4 text-black">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <LogoImage size="sm" priority />
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                  GOO Delivery
-                </p>
-                <p className="text-lg font-black">Course active</p>
-              </div>
-            </div>
-            <span className="rounded-full bg-[#22c55e] px-3 py-1 text-xs font-black">
-              Live
-            </span>
-          </div>
-
-          <div className="relative mt-5 min-h-[320px] overflow-hidden rounded-lg bg-zinc-100">
-            <div className="absolute inset-0 opacity-70 [background-image:linear-gradient(#d4d4d8_1px,transparent_1px),linear-gradient(90deg,#d4d4d8_1px,transparent_1px)] [background-size:38px_38px]" />
-            <div className="absolute left-8 top-8 h-5 w-5 rounded-full border-4 border-white bg-[#22c55e] shadow-lg" />
-            <div className="absolute bottom-12 right-9 h-5 w-5 rounded-full border-4 border-white bg-black shadow-lg" />
-            <div className="absolute left-10 top-11 h-56 w-64 rounded-br-[5rem] border-b-4 border-r-4 border-dashed border-[#22c55e]" />
-            <div className="absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-lg bg-black text-[#22c55e] shadow-2xl">
-              <BikeIcon className="h-10 w-10" />
-            </div>
-            <div className="absolute bottom-4 left-4 right-4 rounded-lg bg-black p-4 text-white shadow-xl">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-black">Livreur en approche</p>
-                  <p className="mt-1 text-xs text-zinc-400">Repas + documents • Douala</p>
-                </div>
-                <span className="rounded-full bg-[#22c55e] px-3 py-2 text-sm font-black text-black">
-                  12 min
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            {deliveryModes.map((mode) => {
-              const Icon = mode.Icon;
-
-              return (
-                <div key={mode.title} className="rounded-lg border border-zinc-200 p-4">
-                  <Icon className="h-7 w-7 text-[#22c55e]" />
-                  <p className="mt-3 text-sm font-black">{mode.title}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -878,6 +1304,8 @@ function BriefcaseIcon({ className = "h-7 w-7" }: IconProps) {
 }
 
 export default function Home() {
+  const [accountOpen, setAccountOpen] = useState(false);
+
   return (
     <main id="accueil" className="min-h-screen bg-white text-black">
       <nav className="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur-xl">
@@ -898,21 +1326,46 @@ export default function Home() {
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
-            <a
-              href="#compte"
+            <button
+              type="button"
+              onClick={() => setAccountOpen(true)}
               className="rounded-full border border-zinc-300 px-5 py-3 text-sm font-black transition hover:border-[#22c55e] hover:text-[#22c55e]"
             >
               Connexion
-            </a>
-            <a
-              href="#compte"
+            </button>
+            <button
+              type="button"
+              onClick={() => setAccountOpen(true)}
               className="rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black"
             >
               Créer un compte
-            </a>
+            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setAccountOpen(true)}
+            className="rounded-full bg-black px-4 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black md:hidden"
+          >
+            Compte
+          </button>
         </div>
       </nav>
+
+      {accountOpen ? (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/60 px-4 py-8 backdrop-blur-sm">
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-4 shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setAccountOpen(false)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-black px-4 py-2 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black"
+            >
+              Fermer
+            </button>
+            <AccountAccess compact />
+          </div>
+        </div>
+      ) : null}
 
       <section className="overflow-hidden bg-[linear-gradient(135deg,#ffffff_0%,#f4f4f5_45%,#0a0a0a_45%,#0a0a0a_100%)] px-5 py-14 sm:px-8 lg:py-20">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.94fr_1.06fr] lg:items-center">
@@ -922,16 +1375,16 @@ export default function Home() {
               Plus rapide. Plus simple. Toujours là.
             </p>
             <h1 className="mt-4 max-w-3xl text-5xl font-black leading-none tracking-tight sm:text-6xl lg:text-7xl">
-              Livraison, compte client et suivi sécurisé.
+              Restaurants de Douala livrés rapidement.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-700">
-              GOO Delivery connecte clients, livreurs, restaurants, boutiques et
-              entreprises avec un service rapide, fiable et professionnel au Cameroun.
+              Choisissez un restaurant, consultez les menus en FCFA, estimez la distance
+              depuis votre position et commandez avec GOO Delivery.
             </p>
 
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
               <PrimaryButton href={whatsappUrl}>Commander sur WhatsApp</PrimaryButton>
-              <SecondaryButton href="#compte">Créer un compte</SecondaryButton>
+              <SecondaryButton href="#restaurants">Voir les restaurants</SecondaryButton>
             </div>
 
             <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
@@ -944,49 +1397,11 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid gap-5">
-            <AccountAccess />
-            <DeliveryDashboard />
+          <div id="restaurants" className="grid gap-5">
+            <RestaurantMarketplace />
           </div>
         </div>
       </section>
-
-      <section id="compte" className="bg-zinc-50 px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
-              Accès client
-            </p>
-            <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
-              Inscription, connexion et double authentification.
-            </h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-600">
-              Le parcours prépare GOO Delivery à gérer des comptes clients avec email ou
-              numéro camerounais, localisation, profil personnel et moyen de paiement préféré.
-            </p>
-
-            <div className="mt-8 grid gap-4">
-              {[
-                "Email ou numéro camerounais",
-                "Code 2FA par email ou SMS",
-                "Nom, prénom et date de naissance",
-                "Ville détectée automatiquement",
-                "Orange Money et MTN Mobile Money",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm">
-                  <span className="grid h-9 w-9 place-items-center rounded-full bg-[#22c55e] text-black">
-                    <CheckIcon />
-                  </span>
-                  <p className="font-black">{item}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <AccountAccess compact />
-        </div>
-      </section>
-
       <section id="services" className="px-5 py-20 sm:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
           <SectionHeader
