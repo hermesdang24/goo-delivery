@@ -1479,9 +1479,9 @@ function CategoryRail({
   onCategory: (category: CategoryId) => void;
 }) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <SectionTitle title="Catégories" action="Filtrage instantané" />
-      <div className="goo-scrollbar flex gap-3 overflow-x-auto pb-2">
+      <div className="goo-scrollbar flex snap-x gap-3 overflow-x-auto pb-2">
         {categories.map((category) => (
           <button
             key={category.id}
@@ -1491,7 +1491,7 @@ function CategoryRail({
               onCategory(category.id);
             }}
             className={cn(
-              "group min-w-[116px] rounded-[24px] p-4 text-left shadow-sm transition duration-300 hover:-translate-y-1",
+              "group flex h-[116px] w-[104px] shrink-0 snap-start flex-col justify-between rounded-[22px] p-3 text-left shadow-sm transition duration-300 hover:-translate-y-1 sm:h-[124px] sm:w-[122px] sm:rounded-[24px] sm:p-4",
               activeCategory === category.id
                 ? "bg-black text-white"
                 : "bg-white text-black hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]",
@@ -1499,15 +1499,22 @@ function CategoryRail({
           >
             <span
               className={cn(
-                "grid h-12 w-12 place-items-center rounded-2xl text-2xl transition",
+                "grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-2xl leading-none transition sm:h-12 sm:w-12",
                 activeCategory === category.id ? "bg-[#00B140] text-black" : "bg-[#00B140]/12 text-[#008f35]",
               )}
             >
               {category.icon}
             </span>
-            <span className="mt-3 block text-sm font-black">{category.label}</span>
-            <span className={cn("mt-1 block text-xs font-bold", activeCategory === category.id ? "text-white/60" : "text-zinc-500")}>
-              {category.hint}
+            <span className="block min-w-0">
+              <span className="block truncate whitespace-nowrap text-sm font-black leading-5">{category.label}</span>
+              <span
+                className={cn(
+                  "mt-0.5 block truncate whitespace-nowrap text-xs font-bold leading-4",
+                  activeCategory === category.id ? "text-white/60" : "text-zinc-500",
+                )}
+              >
+                {category.hint}
+              </span>
             </span>
           </button>
         ))}
@@ -1547,15 +1554,15 @@ function FilterRail({
 
 function PromoSlider() {
   return (
-    <section className="overflow-hidden rounded-[28px] bg-black p-3 text-white">
+    <section className="max-w-full overflow-hidden rounded-[28px] bg-black p-3 text-white">
       <div className="goo-promo-track flex gap-3">
         {[...promoSlides, ...promoSlides].map((slide, index) => (
           <article
             key={`${slide.title}-${index}`}
-            className="min-w-[86vw] rounded-[24px] bg-[linear-gradient(135deg,#00B140,#101010)] p-6 shadow-sm sm:min-w-[520px]"
+            className="w-[calc(100vw-2rem)] max-w-[640px] shrink-0 rounded-[24px] bg-[linear-gradient(135deg,#00B140,#101010)] p-5 shadow-sm sm:w-[520px] sm:p-6"
           >
             <p className="inline-flex rounded-full bg-black/30 px-3 py-1 text-xs font-black">{slide.badge}</p>
-            <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">{slide.title}</h2>
+            <h2 className="mt-5 text-2xl font-black tracking-tight sm:text-4xl">{slide.title}</h2>
             <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-white/80">{slide.text}</p>
           </article>
         ))}
