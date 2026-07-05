@@ -1,634 +1,701 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 
 const logoSrc = "/logo.png";
 const whatsappNumber = "+237 695 502 710";
-const whatsappUrl =
-  "https://wa.me/237695502710?text=Bonjour%20GOO%20Delivery%2C%20je%20souhaite%20faire%20une%20commande.";
-const businessWhatsappUrl =
-  "https://wa.me/237695502710?text=Bonjour%20GOO%20Delivery%2C%20je%20souhaite%20mettre%20en%20place%20une%20solution%20de%20livraison%20pour%20mon%20entreprise.";
-const email = "goodeleveries237@gmail.com";
+const supportPhoneHref = "tel:+237695502710";
+const supportWhatsappUrl =
+  "https://wa.me/237695502710?text=Bonjour%20GOO%20Delivery%2C%20je%20souhaite%20commander.";
 
-type IconProps = {
-  className?: string;
-};
+type AppTab = "home" | "explore" | "orders" | "favorites" | "profile";
+type CategoryId =
+  | "all"
+  | "restaurants"
+  | "fast-food"
+  | "pizza"
+  | "burgers"
+  | "poulet"
+  | "grillades"
+  | "poisson"
+  | "africain"
+  | "asiatique"
+  | "italien"
+  | "supermarche"
+  | "pharmacie"
+  | "boissons"
+  | "desserts"
+  | "boulangerie"
+  | "healthy"
+  | "cafe";
 
-type AuthMode = "signup" | "login";
-type AuthMethod = "email" | "phone";
-type AuthStep = "details" | "verify" | "success";
+type FilterId =
+  | "freeDelivery"
+  | "pickup"
+  | "under20"
+  | "under30"
+  | "promotions"
+  | "topRated"
+  | "open"
+  | "lowPrice";
 
-type AccountForm = {
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  city: string;
-  identifier: string;
-  paymentMethod: string;
-};
+type IconName =
+  | "home"
+  | "explore"
+  | "orders"
+  | "heart"
+  | "profile"
+  | "search"
+  | "bell"
+  | "pin"
+  | "chevron"
+  | "cart"
+  | "share"
+  | "star"
+  | "clock"
+  | "route"
+  | "wallet"
+  | "settings"
+  | "support"
+  | "coupon"
+  | "logout"
+  | "plus"
+  | "minus"
+  | "check"
+  | "close"
+  | "moon"
+  | "spark";
 
-type RestaurantCategory = "Tous" | "Fast-food" | "Restaurants" | "Chinois" | "Camerounais" | "Cafés" | "Pizza";
-
-type MenuItem = {
-  name: string;
-  price: number;
-};
-
-type Restaurant = {
-  name: string;
-  category: Exclude<RestaurantCategory, "Tous">;
-  area: string;
-  address: string;
-  rating: number;
-  deliveryTime: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  tags: string[];
-  imageUrl: string;
-  menu: MenuItem[];
-};
-
-type ClientLocation = {
+type Coordinates = {
   lat: number;
   lng: number;
 };
 
-const navLinks = [
-  { label: "Accueil", href: "#accueil" },
-  { label: "Services", href: "#services" },
-  { label: "Comment ça marche", href: "#fonctionnement" },
-  { label: "Entreprises", href: "#entreprises" },
-  { label: "Partenaires", href: "#partenaires" },
-  { label: "Contact", href: "#contact" },
-];
-
-const stats = [
-  { value: "6", label: "services clés" },
-  { value: "3", label: "moyens de livraison" },
-  { value: "Compte", label: "client sécurisé" },
-];
-
-const services = [
-  {
-    Icon: FoodIcon,
-    title: "Livraison de repas",
-    description: "Plats de restaurants, snacks et commandes urgentes livrés rapidement.",
-  },
-  {
-    Icon: CartIcon,
-    title: "Livraison de courses",
-    description: "Achats du quotidien, retrait en boutique et dépôt à domicile.",
-  },
-  {
-    Icon: BoxIcon,
-    title: "Livraison de colis",
-    description: "Colis personnels ou professionnels avec prise en charge sécurisée.",
-  },
-  {
-    Icon: DocumentIcon,
-    title: "Livraison de documents",
-    description: "Dossiers, contrats et documents sensibles livrés avec soin.",
-  },
-  {
-    Icon: PharmacyIcon,
-    title: "Livraison pharmacie",
-    description: "Produits de pharmacie et besoins urgents acheminés simplement.",
-  },
-  {
-    Icon: BuildingIcon,
-    title: "Livraison entreprise",
-    description: "Solutions régulières pour restaurants, boutiques et sociétés.",
-  },
-];
-
-const steps = [
-  {
-    title: "Le client commande",
-    description: "Envoyez votre demande sur WhatsApp avec le point de retrait et la destination.",
-  },
-  {
-    title: "GOO récupère",
-    description: "Notre équipe confirme la course et assigne le livreur le plus adapté.",
-  },
-  {
-    title: "Le livreur dépose",
-    description: "La livraison est suivie jusqu'à l'arrivée, avec un contact simple et direct.",
-  },
-];
-
-const deliveryModes = [
-  {
-    Icon: BikeIcon,
-    title: "Motos",
-    subtitle: "Livraison rapide",
-    description: "Idéal pour repas, documents et petites courses en ville.",
-  },
-  {
-    Icon: CarIcon,
-    title: "Voitures",
-    subtitle: "Colis importants",
-    description: "Pour les commandes plus sensibles, plus grandes ou à forte valeur.",
-  },
-  {
-    Icon: VanIcon,
-    title: "Vans / fourgonnettes",
-    subtitle: "Volumes et entreprises",
-    description: "Pour les livraisons volumineuses, tournées et besoins professionnels.",
-  },
-];
-
-const enterpriseSolutions = [
-  {
-    Icon: BuildingIcon,
-    title: "Repas d'équipe",
-    description: "Organisez les repas du bureau, les réunions et les journées chargées avec une livraison coordonnée.",
-  },
-  {
-    Icon: CartIcon,
-    title: "Commandes groupées",
-    description: "Centralisez plusieurs besoins dans une même course pour réduire les retards et les échanges.",
-  },
-  {
-    Icon: DocumentIcon,
-    title: "Documents & courses pro",
-    description: "Faites circuler contrats, dossiers, achats et petits colis entre vos sites ou vos clients.",
-  },
-  {
-    Icon: VanIcon,
-    title: "Tournées récurrentes",
-    description: "Planifiez des livraisons régulières pour magasins, pharmacies, supermarchés et entreprises.",
-  },
-];
-
-const enterpriseHighlights = [
-  "Support WhatsApp prioritaire",
-  "Suivi clair des courses",
-  "Motos, voitures et vans",
-  "Solution adaptée aux équipes",
-];
-
-const partners = [
-  "Restaurants",
-  "Boutiques",
-  "Pharmacies",
-  "Supermarchés",
-  "Entreprises",
-];
-
-const advantages = [
-  {
-    Icon: SpeedIcon,
-    title: "Rapide",
-    description: "Des courses fluides et une prise en charge pensée pour gagner du temps.",
-  },
-  {
-    Icon: ShieldIcon,
-    title: "Fiable",
-    description: "Un service sérieux, clair et constant pour chaque type de livraison.",
-  },
-  {
-    Icon: LockIcon,
-    title: "Sécurisé",
-    description: "Colis, repas et documents manipulés avec attention jusqu'au dépôt.",
-  },
-  {
-    Icon: WhatsAppIcon,
-    title: "Support WhatsApp",
-    description: "Un canal direct pour commander, confirmer et suivre la course.",
-  },
-  {
-    Icon: PinIcon,
-    title: "Suivi en temps réel",
-    description: "Une communication simple pour savoir où en est votre livraison.",
-  },
-  {
-    Icon: BriefcaseIcon,
-    title: "Service professionnel",
-    description: "Une image premium adaptée aux particuliers, partenaires et entreprises.",
-  },
-];
-
-const paymentMethods = ["Orange Money", "MTN Mobile Money", "Espèces à la livraison"];
-const demoOtp = "248619";
-
-const defaultForm: AccountForm = {
-  firstName: "",
-  lastName: "",
-  birthDate: "",
-  city: "",
-  identifier: "",
-  paymentMethod: "Orange Money",
+type ProductOption = {
+  label: string;
+  values: string[];
 };
 
-const restaurantCategories: RestaurantCategory[] = [
-  "Tous",
-  "Fast-food",
-  "Restaurants",
-  "Chinois",
-  "Camerounais",
-  "Cafés",
-  "Pizza",
+type MenuItem = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  calories: number;
+  prepTime: string;
+  popularity: number;
+  image: string;
+  options: ProductOption[];
+  extras: Array<{ name: string; price: number }>;
+};
+
+type MenuSection = {
+  title: "Entrées" | "Plats" | "Desserts" | "Boissons";
+  items: MenuItem[];
+};
+
+type Restaurant = {
+  id: string;
+  name: string;
+  shortName: string;
+  description: string;
+  category: CategoryId;
+  categories: CategoryId[];
+  cuisine: string;
+  area: string;
+  address: string;
+  coordinates: Coordinates;
+  phone: string;
+  hours: string;
+  cover: string;
+  logoTone: string;
+  rating: number;
+  reviews: number;
+  etaMin: number;
+  etaMax: number;
+  distanceKm: number;
+  minOrder: number;
+  deliveryBase: number;
+  freeDelivery: boolean;
+  pickup: boolean;
+  promo?: string;
+  isNew?: boolean;
+  isTopRated?: boolean;
+  isVerified: boolean;
+  isOpen: boolean;
+  menu: MenuSection[];
+};
+
+type ClientLocation = {
+  label: string;
+  coordinates: Coordinates | null;
+};
+
+type CartLine = {
+  restaurantId: string;
+  item: MenuItem;
+  quantity: number;
+  size: string;
+  sauce: string;
+  drink: string;
+  extras: string[];
+  note: string;
+};
+
+const categories: Array<{ id: CategoryId; label: string; icon: string; hint: string }> = [
+  { id: "all", label: "Tous", icon: "▦", hint: "Tout voir" },
+  { id: "restaurants", label: "Restaurants", icon: "🍽", hint: "Tables" },
+  { id: "fast-food", label: "Fast Food", icon: "🥙", hint: "Rapide" },
+  { id: "pizza", label: "Pizza", icon: "🍕", hint: "Italien" },
+  { id: "burgers", label: "Burgers", icon: "🍔", hint: "Gourmand" },
+  { id: "poulet", label: "Poulet", icon: "🍗", hint: "Grillé" },
+  { id: "grillades", label: "Grillades", icon: "🥩", hint: "Braisé" },
+  { id: "poisson", label: "Poisson", icon: "🐟", hint: "Frais" },
+  { id: "africain", label: "Africain", icon: "🥘", hint: "Local" },
+  { id: "asiatique", label: "Asiatique", icon: "🍜", hint: "Sushi" },
+  { id: "italien", label: "Italien", icon: "🍝", hint: "Pâtes" },
+  { id: "supermarche", label: "Supermarché", icon: "🛒", hint: "Courses" },
+  { id: "pharmacie", label: "Pharmacie", icon: "💊", hint: "Santé" },
+  { id: "boissons", label: "Boissons", icon: "🥤", hint: "Frais" },
+  { id: "desserts", label: "Desserts", icon: "🍰", hint: "Sucré" },
+  { id: "boulangerie", label: "Boulangerie", icon: "🥐", hint: "Pain" },
+  { id: "healthy", label: "Healthy", icon: "🥗", hint: "Léger" },
+  { id: "cafe", label: "Café", icon: "☕", hint: "Brunch" },
 ];
+
+const filters: Array<{ id: FilterId; label: string }> = [
+  { id: "freeDelivery", label: "Livraison gratuite" },
+  { id: "pickup", label: "Pickup" },
+  { id: "under20", label: "Moins de 20 min" },
+  { id: "under30", label: "Moins de 30 min" },
+  { id: "promotions", label: "Promotions" },
+  { id: "topRated", label: "Les mieux notés" },
+  { id: "open", label: "Ouvert actuellement" },
+  { id: "lowPrice", label: "Prix" },
+];
+
+const promoSlides = [
+  {
+    title: "20% OFF ce week-end",
+    text: "Sur une sélection de restaurants partenaires à Douala.",
+    badge: "Code GOO20",
+  },
+  {
+    title: "Livraison gratuite",
+    text: "Sur les restaurants vérifiés proches de votre position.",
+    badge: "Proche de vous",
+  },
+  {
+    title: "Nouveaux restaurants",
+    text: "Découvrez les nouvelles adresses premium de Bonamoussadi.",
+    badge: "Nouveau",
+  },
+  {
+    title: "Programme fidélité",
+    text: "Cumulez des points à chaque commande GOO Delivery.",
+    badge: "GOO Club",
+  },
+];
+
+const baseOptions: ProductOption[] = [
+  { label: "Taille", values: ["Normal", "Grand", "Famille"] },
+  { label: "Sauce", values: ["Douce", "Pimentée", "Sans sauce"] },
+  { label: "Boisson", values: ["Sans boisson", "Eau", "Soda", "Jus naturel"] },
+];
+
+const foodImages = {
+  burger: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=80",
+  pizza: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80",
+  african: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=900&q=80",
+  bowl: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=80",
+  sushi: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=900&q=80",
+  coffee: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80",
+  grill: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80",
+  bakery: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80",
+  pharmacy: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=900&q=80",
+  market: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80",
+};
 
 const restaurants: Restaurant[] = [
-  {
+  createRestaurant({
+    id: "gosto",
     name: "Gosto Resto-Café",
-    category: "Fast-food",
-    area: "Bonamousadi",
-    address: "Rond Point Maetur, Station Ola",
-    rating: 4.7,
-    deliveryTime: "25-40 min",
+    shortName: "G",
+    description: "Burgers, shawarmas, pizzas et milk-shakes pour une commande rapide à Bonamoussadi.",
+    category: "fast-food",
+    categories: ["fast-food", "burgers", "pizza", "boissons", "restaurants"],
+    cuisine: "Fast food premium",
+    area: "Bonamoussadi",
+    address: "Rond-point Maetur, station Ola, Douala",
     coordinates: { lat: 4.0908, lng: 9.7437 },
-    tags: ["Burgers", "Shawarma", "Milk-shakes"],
-    imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Burger américain viande", price: 3500 },
-      { name: "Shawarma poulet", price: 2500 },
-      { name: "Pizza familiale", price: 10000 },
-      { name: "Milk-shake vanille", price: 2500 },
+    cover: foodImages.burger,
+    logoTone: "bg-black",
+    rating: 4.7,
+    reviews: 824,
+    etaMin: 18,
+    etaMax: 32,
+    distanceKm: 2.4,
+    minOrder: 3000,
+    deliveryBase: 700,
+    freeDelivery: true,
+    pickup: true,
+    promo: "20% OFF",
+    isTopRated: true,
+    menuSeed: [
+      ["Plats", "Burger américain", "Steak, cheddar, salade fraîche et sauce maison.", 3500, foodImages.burger],
+      ["Plats", "Shawarma poulet", "Poulet mariné, crudités, frites et sauce au choix.", 2500, foodImages.burger],
+      ["Plats", "Pizza familiale", "Pizza généreuse à partager, garniture au choix.", 10000, foodImages.pizza],
+      ["Boissons", "Milk-shake vanille", "Milk-shake froid, crémeux et parfumé.", 2500, foodImages.coffee],
     ],
-  },
-  {
+  }),
+  createRestaurant({
+    id: "bantou",
     name: "Restaurant Bantou",
-    category: "Camerounais",
+    shortName: "B",
+    description: "Cuisine camerounaise, grillades et plats généreux proches de Makepe.",
+    category: "africain",
+    categories: ["africain", "grillades", "poulet", "poisson", "restaurants"],
+    cuisine: "Cuisine camerounaise",
     area: "Makepe",
-    address: "Makepe DHL",
-    rating: 4.6,
-    deliveryTime: "30-45 min",
+    address: "Makepe, près de DHL, Douala",
     coordinates: { lat: 4.0835, lng: 9.7425 },
-    tags: ["Terroir", "Grillades", "Fast-food"],
-    imageUrl: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Poulet braisé", price: 3500 },
-      { name: "Ndolé plantain", price: 4500 },
-      { name: "Poisson braisé", price: 6500 },
-      { name: "Frites de plantain", price: 1500 },
+    cover: foodImages.african,
+    logoTone: "bg-[#00B140]",
+    rating: 4.6,
+    reviews: 512,
+    etaMin: 26,
+    etaMax: 42,
+    distanceKm: 3.1,
+    minOrder: 3500,
+    deliveryBase: 900,
+    freeDelivery: false,
+    pickup: false,
+    isVerified: true,
+    menuSeed: [
+      ["Plats", "Poulet braisé", "Poulet braisé, plantain et sauce piment.", 3500, foodImages.grill],
+      ["Plats", "Ndolé plantain", "Ndolé riche, viande et plantain mûr.", 4500, foodImages.african],
+      ["Plats", "Poisson braisé", "Poisson frais, condiments et accompagnement.", 6500, foodImages.grill],
+      ["Accompagnements", "Frites de plantain", "Plantain doré et croustillant.", 1500, foodImages.african],
     ],
-  },
-  {
+  }),
+  createRestaurant({
+    id: "paradise",
     name: "Le Paradise",
-    category: "Restaurants",
+    shortName: "P",
+    description: "Adresse moderne à Bonapriso pour pizza, poisson et fruits de mer.",
+    category: "restaurants",
+    categories: ["restaurants", "pizza", "poisson", "italien"],
+    cuisine: "International",
     area: "Bonapriso",
-    address: "Rue Tokoto",
-    rating: 4.4,
-    deliveryTime: "30-50 min",
+    address: "Rue Tokoto, Bonapriso, Douala",
     coordinates: { lat: 4.0268, lng: 9.7047 },
-    tags: ["Pizza", "Poisson", "Terrasse"],
-    imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Pizza reine", price: 7000 },
-      { name: "Crevettes grillées", price: 9000 },
-      { name: "Filet de poisson", price: 8500 },
-      { name: "Salade maison", price: 3500 },
+    cover: foodImages.pizza,
+    logoTone: "bg-zinc-900",
+    rating: 4.4,
+    reviews: 438,
+    etaMin: 30,
+    etaMax: 48,
+    distanceKm: 5.8,
+    minOrder: 5000,
+    deliveryBase: 1100,
+    freeDelivery: false,
+    pickup: true,
+    promo: "Menu duo",
+    menuSeed: [
+      ["Plats", "Pizza reine", "Jambon, fromage, champignons et sauce tomate.", 7000, foodImages.pizza],
+      ["Plats", "Crevettes grillées", "Crevettes assaisonnées, riz et légumes.", 9000, foodImages.grill],
+      ["Plats", "Filet de poisson", "Filet tendre, sauce citron et accompagnement.", 8500, foodImages.grill],
+      ["Entrées", "Salade maison", "Laitue, avocat, tomate et vinaigrette légère.", 3500, foodImages.bowl],
     ],
-  },
-  {
-    name: "Shania Café Resto",
-    category: "Cafés",
-    area: "Bonabéri",
-    address: "Marché Tanko",
-    rating: 4.5,
-    deliveryTime: "35-55 min",
-    coordinates: { lat: 4.0859, lng: 9.6684 },
-    tags: ["Petit déjeuner", "Café", "Cuisine locale"],
-    imageUrl: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Omelette", price: 500 },
-      { name: "Thé", price: 500 },
-      { name: "Salade végétale", price: 2500 },
-      { name: "Riz sauce tomate", price: 3000 },
-    ],
-  },
-  {
-    name: "GTF Resto",
-    category: "Restaurants",
-    area: "Borne 10",
-    address: "Face Hôtel Porte Maillot",
-    rating: 4.3,
-    deliveryTime: "35-55 min",
-    coordinates: { lat: 4.0612, lng: 9.7835 },
-    tags: ["Cuisine variée", "Lunch", "Famille"],
-    imageUrl: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Riz sauté poulet", price: 3500 },
-      { name: "Poulet DG", price: 5000 },
-      { name: "Poisson sauce", price: 6000 },
-      { name: "Jus naturel", price: 1500 },
-    ],
-  },
-  {
-    name: "Tom Burger",
-    category: "Fast-food",
-    area: "Douala",
-    address: "Snack bar restaurant",
-    rating: 4.2,
-    deliveryTime: "25-40 min",
-    coordinates: { lat: 4.0471, lng: 9.7064 },
-    tags: ["Burgers", "Poulet", "Frites"],
-    imageUrl: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Burger classique", price: 3000 },
-      { name: "Burger double", price: 4500 },
-      { name: "Poulet frites", price: 4000 },
-      { name: "Glace", price: 1500 },
-    ],
-  },
-  {
+  }),
+  createRestaurant({
+    id: "asian-bowl",
     name: "Asian Bowl Douala",
-    category: "Chinois",
-    area: "Bonapriso",
-    address: "Zone Akwa Palace - Bonapriso",
-    rating: 4.5,
-    deliveryTime: "30-45 min",
+    shortName: "A",
+    description: "Riz cantonais, nouilles sautées et plats asiatiques livrés rapidement.",
+    category: "asiatique",
+    categories: ["asiatique", "restaurants"],
+    cuisine: "Asiatique",
+    area: "Akwa",
+    address: "Zone Akwa Palace, Douala",
     coordinates: { lat: 4.0309, lng: 9.6999 },
-    tags: ["Nouilles", "Riz cantonais", "Poulet"],
-    imageUrl: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Riz cantonais poulet", price: 4500 },
-      { name: "Nouilles sautées bœuf", price: 5000 },
-      { name: "Poulet aigre-doux", price: 5500 },
-      { name: "Nems légumes", price: 2500 },
+    cover: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=900&q=80",
+    logoTone: "bg-black",
+    rating: 4.5,
+    reviews: 604,
+    etaMin: 24,
+    etaMax: 39,
+    distanceKm: 4.3,
+    minOrder: 4000,
+    deliveryBase: 850,
+    freeDelivery: true,
+    pickup: true,
+    isNew: true,
+    menuSeed: [
+      ["Plats", "Riz cantonais poulet", "Riz sauté, poulet, œufs et légumes croquants.", 4500, foodImages.sushi],
+      ["Plats", "Nouilles sautées bœuf", "Nouilles fraîches sautées avec bœuf mariné.", 5000, foodImages.sushi],
+      ["Plats", "Poulet aigre-doux", "Poulet croustillant et sauce aigre-douce.", 5500, foodImages.sushi],
+      ["Entrées", "Nems légumes", "Nems dorés, sauce sucrée et salade.", 2500, foodImages.sushi],
     ],
-  },
-  {
-    name: "Pizza Loving Hut",
-    category: "Pizza",
-    area: "Douala",
-    address: "Centre-ville",
-    rating: 4.6,
-    deliveryTime: "30-50 min",
-    coordinates: { lat: 4.0511, lng: 9.7679 },
-    tags: ["Pizza", "Vegan", "International"],
-    imageUrl: "https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Pizza végétarienne", price: 6500 },
-      { name: "Pizza fromage", price: 6000 },
-      { name: "Pizza champignons", price: 7000 },
-      { name: "Jus frais", price: 1500 },
-    ],
-  },
-  {
+  }),
+  createRestaurant({
+    id: "tchop-yamo",
     name: "Tchop & Yamo Bonamoussadi",
-    category: "Fast-food",
+    shortName: "Y",
+    description: "Afro fast-food, beignets, bowls et jus naturels au cœur de Bonamoussadi.",
+    category: "fast-food",
+    categories: ["fast-food", "africain", "boissons", "restaurants"],
+    cuisine: "Afro fast-food",
     area: "Bonamoussadi",
-    address: "Bonamoussadi avant JC",
-    rating: 4.4,
-    deliveryTime: "20-35 min",
+    address: "Bonamoussadi, Douala",
     coordinates: { lat: 4.0937, lng: 9.7429 },
-    tags: ["Afro fast-food", "Beignets", "Jus naturel"],
-    imageUrl: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Beignets haricots bouillie", price: 1500 },
-      { name: "Ndogmangolo soya poulet", price: 2000 },
-      { name: "Salade Bitchakala", price: 2500 },
-      { name: "Jus Yamo ananas", price: 1500 },
-    ],
-  },
-  {
-    name: "Les Cèdres Bonamoussadi",
-    category: "Pizza",
-    area: "Bonamoussadi",
-    address: "Bonamoussadi, Douala",
-    rating: 4.5,
-    deliveryTime: "25-45 min",
-    coordinates: { lat: 4.0897, lng: 9.7445 },
-    tags: ["Pizza", "Smoothies", "Jus"],
-    imageUrl: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Pizza margherita", price: 5500 },
-      { name: "Pizza poulet", price: 7000 },
-      { name: "Smoothie fruits", price: 2500 },
-      { name: "Jus de fruits", price: 1500 },
-    ],
-  },
-  {
-    name: "Le Glacier Moderne",
-    category: "Cafés",
-    area: "Bonamoussadi",
-    address: "3PQP+373, Bonamoussadi",
-    rating: 4.1,
-    deliveryTime: "20-35 min",
-    coordinates: { lat: 4.0884, lng: 9.7356 },
-    tags: ["Glaces", "Jus", "Desserts"],
-    imageUrl: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Glace 2 boules", price: 2000 },
-      { name: "Milk-shake", price: 2500 },
-      { name: "Jus de carotte", price: 1500 },
-      { name: "Gaufre chocolat", price: 3000 },
-    ],
-  },
-  {
-    name: "White House Restaurant",
-    category: "Restaurants",
-    area: "Bonamoussadi",
-    address: "Bonamoussadi, Douala",
-    rating: 4.3,
-    deliveryTime: "30-50 min",
-    coordinates: { lat: 4.0918, lng: 9.7466 },
-    tags: ["Grillades", "Cuisine variée", "Afterwork"],
-    imageUrl: "https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Brochettes de bœuf", price: 3500 },
-      { name: "Poulet braisé", price: 4500 },
-      { name: "Riz sauté", price: 3000 },
-      { name: "Poisson grillé", price: 7000 },
-    ],
-  },
-  {
-    name: "African Food by Emy",
-    category: "Camerounais",
-    area: "Bonamoussadi",
-    address: "Bonamoussadi, Douala",
-    rating: 4.6,
-    deliveryTime: "30-50 min",
-    coordinates: { lat: 4.0958, lng: 9.7421 },
-    tags: ["Cuisine africaine", "Sauces", "Livraison"],
-    imageUrl: "https://images.unsplash.com/photo-1617692855027-33b14f061079?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Eru water fufu", price: 4500 },
-      { name: "Okok sucré", price: 3500 },
-      { name: "Ndolé viande", price: 5000 },
-      { name: "Koki plantain", price: 3000 },
-    ],
-  },
-  {
-    name: "Restaurant À La Porte Jaune",
-    category: "Camerounais",
-    area: "Bonamoussadi",
-    address: "Bloc Sonel, face Yoro Joss",
-    rating: 4.5,
-    deliveryTime: "35-55 min",
-    coordinates: { lat: 4.0891, lng: 9.7527 },
-    tags: ["Traditionnel", "Salle banquet", "Grillades"],
-    imageUrl: "https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Mbongo tchobi", price: 6000 },
-      { name: "Achu yellow soup", price: 4500 },
-      { name: "Sauce gombo", price: 3500 },
-      { name: "Plantain mûr", price: 1500 },
-    ],
-  },
-  {
-    name: "Friends Food Bonamoussadi",
-    category: "Fast-food",
-    area: "Bonamoussadi",
-    address: "Rue école publique",
-    rating: 4.2,
-    deliveryTime: "25-40 min",
-    coordinates: { lat: 4.0922, lng: 9.7388 },
-    tags: ["Portions généreuses", "Poulet", "Frites"],
-    imageUrl: "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Poulet pané frites", price: 3500 },
-      { name: "Burger maison", price: 3000 },
-      { name: "Shawarma mixte", price: 2500 },
-      { name: "Jus naturel", price: 1200 },
-    ],
-  },
-  {
-    name: "O'SAN",
-    category: "Restaurants",
-    area: "Bonamoussadi",
-    address: "5.n137 Bonamoussadi",
+    cover: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=80",
+    logoTone: "bg-[#00B140]",
     rating: 4.4,
-    deliveryTime: "35-55 min",
-    coordinates: { lat: 4.0949, lng: 9.7495 },
-    tags: ["Wine bar", "Restaurant", "Premium"],
-    imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",
-    menu: [
-      { name: "Assiette tapas", price: 6500 },
-      { name: "Pâtes crème poulet", price: 7000 },
-      { name: "Filet de bœuf", price: 12000 },
-      { name: "Mocktail maison", price: 3000 },
+    reviews: 765,
+    etaMin: 16,
+    etaMax: 28,
+    distanceKm: 1.8,
+    minOrder: 2000,
+    deliveryBase: 600,
+    freeDelivery: true,
+    pickup: true,
+    promo: "Livraison offerte",
+    menuSeed: [
+      ["Plats", "Beignets haricots bouillie", "Combo local chaud et généreux.", 1500, foodImages.african],
+      ["Plats", "Ndogmangolo soya poulet", "Soya de poulet, légumes et sauce maison.", 2000, foodImages.grill],
+      ["Entrées", "Salade Bitchakala", "Salade fraîche, croquante et relevée.", 2500, foodImages.bowl],
+      ["Boissons", "Jus Yamo ananas", "Jus naturel d’ananas pressé.", 1500, foodImages.coffee],
     ],
-  },
+  }),
+  createRestaurant({
+    id: "maison-h",
+    name: "Maison H",
+    shortName: "H",
+    description: "Brunch, salades, pâtisserie moderne et café premium à Bonapriso.",
+    category: "cafe",
+    categories: ["cafe", "healthy", "desserts", "boissons", "restaurants"],
+    cuisine: "Brunch et café",
+    area: "Bonapriso",
+    address: "Quartier Bonapriso, Douala",
+    coordinates: { lat: 4.0278, lng: 9.7065 },
+    cover: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=900&q=80",
+    logoTone: "bg-zinc-900",
+    rating: 4.8,
+    reviews: 921,
+    etaMin: 28,
+    etaMax: 44,
+    distanceKm: 5.4,
+    minOrder: 5000,
+    deliveryBase: 1000,
+    freeDelivery: false,
+    pickup: true,
+    isTopRated: true,
+    menuSeed: [
+      ["Plats", "Avocado toast", "Pain toasté, avocat, œuf et graines.", 5500, foodImages.bowl],
+      ["Plats", "Club sandwich poulet", "Pain moelleux, poulet, fromage et salade.", 6500, foodImages.burger],
+      ["Desserts", "Pancakes miel fruits", "Pancakes moelleux, miel et fruits frais.", 5000, foodImages.bakery],
+      ["Boissons", "Jus pressé", "Jus naturel pressé minute.", 2500, foodImages.coffee],
+    ],
+  }),
+  createRestaurant({
+    id: "bombay",
+    name: "Bombay Masala",
+    shortName: "M",
+    description: "Cuisine indienne, curry, biryani et plats épicés à Bonapriso.",
+    category: "asiatique",
+    categories: ["asiatique", "restaurants"],
+    cuisine: "Indien",
+    area: "Bonapriso",
+    address: "Rue Koloko, Douala",
+    coordinates: { lat: 4.0255, lng: 9.7028 },
+    cover: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=900&q=80",
+    logoTone: "bg-black",
+    rating: 4.5,
+    reviews: 487,
+    etaMin: 35,
+    etaMax: 55,
+    distanceKm: 5.9,
+    minOrder: 6000,
+    deliveryBase: 1200,
+    freeDelivery: false,
+    pickup: false,
+    promo: "Combo curry",
+    menuSeed: [
+      ["Plats", "Butter chicken", "Poulet tendre, curry doux et riz basmati.", 8500, foodImages.sushi],
+      ["Plats", "Biryani poulet", "Riz parfumé, poulet mariné et épices.", 8000, foodImages.sushi],
+      ["Entrées", "Samosa légumes", "Samosas croustillants aux légumes.", 3000, foodImages.bowl],
+      ["Boissons", "Lassi mangue", "Boisson indienne à la mangue.", 3000, foodImages.coffee],
+    ],
+  }),
+  createRestaurant({
+    id: "la-pizzeria",
+    name: "La Pizzeria",
+    shortName: "PZ",
+    description: "Pizzas, pâtes et desserts italiens avec cuisson rapide.",
+    category: "pizza",
+    categories: ["pizza", "italien", "desserts", "restaurants"],
+    cuisine: "Pizza et italien",
+    area: "Bonapriso",
+    address: "Bonapriso, Douala",
+    coordinates: { lat: 4.0283, lng: 9.7038 },
+    cover: "https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=900&q=80",
+    logoTone: "bg-[#00B140]",
+    rating: 4.6,
+    reviews: 643,
+    etaMin: 23,
+    etaMax: 38,
+    distanceKm: 5.5,
+    minOrder: 5000,
+    deliveryBase: 950,
+    freeDelivery: false,
+    pickup: true,
+    isTopRated: true,
+    menuSeed: [
+      ["Plats", "Pizza margherita", "Tomate, mozzarella et basilic.", 6000, foodImages.pizza],
+      ["Plats", "Pizza quatre fromages", "Mozzarella, bleu, chèvre et parmesan.", 8500, foodImages.pizza],
+      ["Plats", "Pâtes bolognaise", "Sauce tomate, bœuf et parmesan.", 7000, foodImages.pizza],
+      ["Desserts", "Tiramisu", "Dessert italien au café et mascarpone.", 4000, foodImages.bakery],
+    ],
+  }),
+  createRestaurant({
+    id: "sushi-lounge",
+    name: "Sushi Lounge Douala",
+    shortName: "S",
+    description: "Sushi, makis et plateaux premium pour les commandes fraîches.",
+    category: "asiatique",
+    categories: ["asiatique", "restaurants"],
+    cuisine: "Sushi",
+    area: "Bonapriso",
+    address: "Bonapriso, Douala",
+    coordinates: { lat: 4.0265, lng: 9.7041 },
+    cover: foodImages.sushi,
+    logoTone: "bg-black",
+    rating: 4.7,
+    reviews: 388,
+    etaMin: 35,
+    etaMax: 55,
+    distanceKm: 5.7,
+    minOrder: 7000,
+    deliveryBase: 1300,
+    freeDelivery: false,
+    pickup: false,
+    isNew: true,
+    menuSeed: [
+      ["Plats", "California rolls", "Riz vinaigré, avocat, crabe et sésame.", 7000, foodImages.sushi],
+      ["Plats", "Plateau mix 18 pièces", "Assortiment makis, sushi et rolls.", 18000, foodImages.sushi],
+      ["Entrées", "Tempura crevettes", "Crevettes croustillantes et sauce légère.", 9000, foodImages.sushi],
+      ["Boissons", "Thé vert glacé", "Thé vert frais et légèrement sucré.", 2000, foodImages.coffee],
+    ],
+  }),
+  createRestaurant({
+    id: "green-bowl",
+    name: "Green Bowl Bonamoussadi",
+    shortName: "GB",
+    description: "Bowls, wraps, salades, smoothies et options healthy.",
+    category: "healthy",
+    categories: ["healthy", "boissons", "restaurants"],
+    cuisine: "Healthy",
+    area: "Bonamoussadi",
+    address: "Bonamoussadi, Douala",
+    coordinates: { lat: 4.0929, lng: 9.7429 },
+    cover: foodImages.bowl,
+    logoTone: "bg-[#00B140]",
+    rating: 4.3,
+    reviews: 292,
+    etaMin: 18,
+    etaMax: 30,
+    distanceKm: 1.9,
+    minOrder: 3000,
+    deliveryBase: 650,
+    freeDelivery: true,
+    pickup: true,
+    menuSeed: [
+      ["Plats", "Bowl poulet avocat", "Poulet grillé, avocat, riz et légumes.", 5500, foodImages.bowl],
+      ["Plats", "Wrap légumes", "Wrap léger aux légumes croquants.", 3500, foodImages.bowl],
+      ["Desserts", "Yaourt granola", "Yaourt, granola et fruits.", 3000, foodImages.bakery],
+      ["Boissons", "Smoothie vert", "Smoothie épinard, pomme et citron.", 2500, foodImages.coffee],
+    ],
+  }),
+  createRestaurant({
+    id: "zepol",
+    name: "Zepol Bonapriso",
+    shortName: "Z",
+    description: "Boulangerie, pâtisserie, café et snacks de qualité.",
+    category: "boulangerie",
+    categories: ["boulangerie", "cafe", "desserts", "boissons"],
+    cuisine: "Boulangerie",
+    area: "Bonapriso",
+    address: "Bonapriso, Douala",
+    coordinates: { lat: 4.0271, lng: 9.7072 },
+    cover: foodImages.bakery,
+    logoTone: "bg-zinc-900",
+    rating: 4.4,
+    reviews: 506,
+    etaMin: 20,
+    etaMax: 34,
+    distanceKm: 5.1,
+    minOrder: 2500,
+    deliveryBase: 800,
+    freeDelivery: false,
+    pickup: true,
+    menuSeed: [
+      ["Entrées", "Croissant beurre", "Croissant pur beurre croustillant.", 1000, foodImages.bakery],
+      ["Plats", "Sandwich jambon fromage", "Pain frais, jambon, fromage et salade.", 3500, foodImages.bakery],
+      ["Desserts", "Éclair chocolat", "Pâte à choux et crème chocolat.", 2000, foodImages.bakery],
+      ["Boissons", "Cappuccino", "Café espresso et lait mousseux.", 2000, foodImages.coffee],
+    ],
+  }),
+  createRestaurant({
+    id: "urban-shawarma",
+    name: "Urban Shawarma",
+    shortName: "US",
+    description: "Shawarma, tacos, burgers et snacks rapides.",
+    category: "fast-food",
+    categories: ["fast-food", "burgers", "poulet", "boissons"],
+    cuisine: "Shawarma",
+    area: "Bonamoussadi",
+    address: "Carrefour Maetur, Douala",
+    coordinates: { lat: 4.0917, lng: 9.7454 },
+    cover: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=900&q=80",
+    logoTone: "bg-black",
+    rating: 4.2,
+    reviews: 354,
+    etaMin: 15,
+    etaMax: 27,
+    distanceKm: 2.1,
+    minOrder: 2500,
+    deliveryBase: 650,
+    freeDelivery: true,
+    pickup: true,
+    promo: "Tacos -15%",
+    menuSeed: [
+      ["Plats", "Shawarma poulet", "Pain roulé, poulet et sauce au choix.", 2500, foodImages.burger],
+      ["Plats", "Tacos gratiné", "Tacos généreux, fromage gratiné et frites.", 5000, foodImages.burger],
+      ["Plats", "Burger chicken", "Poulet croustillant et sauce maison.", 3500, foodImages.burger],
+      ["Boissons", "Soda", "Boisson fraîche au choix.", 1000, foodImages.coffee],
+    ],
+  }),
+  createRestaurant({
+    id: "market",
+    name: "GOO Market Bonamoussadi",
+    shortName: "M",
+    description: "Courses du quotidien, produits frais et épicerie livrés vite.",
+    category: "supermarche",
+    categories: ["supermarche", "boissons"],
+    cuisine: "Supermarché",
+    area: "Bonamoussadi",
+    address: "Bonamoussadi, Douala",
+    coordinates: { lat: 4.0888, lng: 9.7449 },
+    cover: foodImages.market,
+    logoTone: "bg-[#00B140]",
+    rating: 4.4,
+    reviews: 274,
+    etaMin: 22,
+    etaMax: 38,
+    distanceKm: 2.6,
+    minOrder: 5000,
+    deliveryBase: 900,
+    freeDelivery: false,
+    pickup: false,
+    isNew: true,
+    menuSeed: [
+      ["Plats", "Pack petit déjeuner", "Pain, lait, œufs et jus.", 6500, foodImages.market],
+      ["Plats", "Panier légumes", "Assortiment de légumes frais.", 5000, foodImages.market],
+      ["Boissons", "Pack eau minérale", "Pack de bouteilles d’eau.", 3000, foodImages.market],
+      ["Desserts", "Biscuits chocolat", "Biscuits familiaux.", 1800, foodImages.market],
+    ],
+  }),
+  createRestaurant({
+    id: "pharmacy",
+    name: "GOO Pharmacie Express",
+    shortName: "RX",
+    description: "Produits de pharmacie, hygiène et besoins urgents avec assistance GOO.",
+    category: "pharmacie",
+    categories: ["pharmacie"],
+    cuisine: "Pharmacie",
+    area: "Akwa",
+    address: "Akwa centre, Douala",
+    coordinates: { lat: 4.0502, lng: 9.7013 },
+    cover: foodImages.pharmacy,
+    logoTone: "bg-black",
+    rating: 4.5,
+    reviews: 198,
+    etaMin: 24,
+    etaMax: 40,
+    distanceKm: 4.8,
+    minOrder: 3000,
+    deliveryBase: 800,
+    freeDelivery: false,
+    pickup: true,
+    isVerified: true,
+    menuSeed: [
+      ["Plats", "Kit hygiène", "Savon, gel et lingettes.", 4500, foodImages.pharmacy],
+      ["Plats", "Pack vitamines", "Compléments selon disponibilité.", 6500, foodImages.pharmacy],
+      ["Boissons", "Solution hydratation", "Boisson de réhydratation.", 2000, foodImages.pharmacy],
+      ["Entrées", "Gel mains", "Gel hydroalcoolique.", 1500, foodImages.pharmacy],
+    ],
+  }),
 ];
 
-function LogoImage({
-  size = "md",
-  priority = false,
-  surface = "light",
-}: {
-  size?: "sm" | "md" | "lg" | "xl";
-  priority?: boolean;
-  surface?: "light" | "dark";
-}) {
-  const sizes = {
-    sm: "h-10 w-24 max-w-[38vw] sm:w-28",
-    md: "h-12 w-32 max-w-[48vw] sm:w-44",
-    lg: "h-20 w-full max-w-full sm:h-28 sm:max-w-80",
-    xl: "h-24 w-full max-w-full sm:h-36 sm:max-w-[28rem] lg:h-40 lg:max-w-[32rem]",
+function createRestaurant(input: Omit<Restaurant, "phone" | "hours" | "isOpen" | "isVerified" | "menu"> & {
+  phone?: string;
+  hours?: string;
+  isOpen?: boolean;
+  isVerified?: boolean;
+  menuSeed: Array<[MenuSection["title"] | "Accompagnements", string, string, number, string]>;
+}): Restaurant {
+  const sectionOrder: MenuSection["title"][] = ["Entrées", "Plats", "Desserts", "Boissons"];
+  const grouped = input.menuSeed.reduce<Record<MenuSection["title"], MenuItem[]>>(
+    (acc, [title, name, description, price, image], index) => {
+      const normalizedTitle: MenuSection["title"] = title === "Accompagnements" ? "Entrées" : title;
+      acc[normalizedTitle].push({
+        id: `${input.id}-${index}`,
+        name,
+        description,
+        price,
+        image,
+        calories: 260 + index * 85,
+        prepTime: `${8 + index * 2}-${14 + index * 2} min`,
+        popularity: 84 + ((index * 7) % 15),
+        options: baseOptions,
+        extras: [
+          { name: "Fromage", price: 500 },
+          { name: "Sauce extra", price: 300 },
+          { name: "Portion plus grande", price: 1200 },
+        ],
+      });
+      return acc;
+    },
+    { Entrées: [], Plats: [], Desserts: [], Boissons: [] },
+  );
+
+  return {
+    ...input,
+    phone: input.phone ?? whatsappNumber,
+    hours: input.hours ?? "Ouvert aujourd’hui · 10:00 - 22:30",
+    isOpen: input.isOpen ?? true,
+    isVerified: input.isVerified ?? true,
+    menu: sectionOrder
+      .map((title) => ({ title, items: grouped[title] }))
+      .filter((section) => section.items.length > 0),
   };
-
-  const scales = {
-    sm: "scale-100 sm:scale-[1.85]",
-    md: "scale-100 sm:scale-[1.75]",
-    lg: "scale-100 sm:scale-[1.5]",
-    xl: "scale-100 sm:scale-[1.42]",
-  };
-
-  return (
-    <div
-      className={`relative overflow-hidden ${sizes[size]} ${
-        surface === "dark"
-          ? "rounded-lg bg-white/95 shadow-2xl shadow-black/30 ring-1 ring-white/10"
-          : ""
-      }`}
-    >
-      <Image
-        src={logoSrc}
-        alt="Logo officiel GOO Delivery"
-        fill
-        priority={priority}
-        sizes="(min-width: 1024px) 512px, (min-width: 640px) 448px, 90vw"
-        className={`object-contain mix-blend-multiply ${scales[size]}`}
-      />
-    </div>
-  );
 }
 
-function SectionHeader({
-  eyebrow,
-  title,
-  description,
-  inverted = false,
-}: {
-  eyebrow: string;
-  title: string;
-  description?: string;
-  inverted?: boolean;
-}) {
-  return (
-    <div className="mx-auto max-w-3xl min-w-0 text-center">
-      <p className="break-words text-sm font-black uppercase tracking-[0.14em] text-[#22c55e] sm:tracking-[0.14em] sm:tracking-[0.22em]">
-        {eyebrow}
-      </p>
-      <h2
-        className={`mt-4 break-words text-4xl font-black tracking-tight sm:text-5xl ${
-          inverted ? "text-white" : "text-black"
-        }`}
-      >
-        {title}
-      </h2>
-      {description ? (
-        <p
-          className={`mt-5 text-lg leading-8 ${
-            inverted ? "text-zinc-300" : "text-zinc-600"
-          }`}
-        >
-          {description}
-        </p>
-      ) : null}
-    </div>
-  );
+function formatPrice(value: number) {
+  return `${new Intl.NumberFormat("fr-CM").format(Math.max(0, Math.round(value)))} FCFA`;
 }
 
-function PrimaryButton({
-  children,
-  href,
-  dark = false,
-}: {
-  children: React.ReactNode;
-  href: string;
-  dark?: boolean;
-}) {
-  return (
-    <a
-      href={href}
-      target={href.startsWith("http") ? "_blank" : undefined}
-      rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-      className={`inline-flex w-full max-w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-center text-base font-black transition hover:-translate-y-0.5 sm:w-auto sm:px-7 ${
-        dark
-          ? "bg-black text-white shadow-[0_18px_45px_rgba(0,0,0,0.24)] hover:bg-zinc-900"
-          : "bg-[#22c55e] text-black shadow-[0_18px_45px_rgba(34,197,94,0.26)] hover:bg-green-400"
-      }`}
-    >
-      {children}
-      <ArrowIcon />
-    </a>
-  );
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }
 
-function SecondaryButton({ children, href }: { children: React.ReactNode; href: string }) {
-  return (
-    <a
-      href={href}
-      className="inline-flex w-full max-w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-6 py-4 text-center text-base font-black text-black transition hover:border-[#22c55e] hover:text-[#22c55e] sm:w-auto sm:px-7"
-    >
-      {children}
-    </a>
-  );
+function roundTo50(value: number) {
+  return Math.ceil(value / 50) * 50;
 }
 
-function formatPrice(price: number) {
-  return new Intl.NumberFormat("fr-CM").format(price) + " FCFA";
-}
-
-function getDistanceKm(origin: ClientLocation, destination: Restaurant["coordinates"]) {
+function getDistanceKm(origin: Coordinates, destination: Coordinates) {
   const radius = 6371;
   const dLat = ((destination.lat - origin.lat) * Math.PI) / 180;
   const dLng = ((destination.lng - origin.lng) * Math.PI) / 180;
@@ -640,508 +707,761 @@ function getDistanceKm(origin: ClientLocation, destination: Restaurant["coordina
   return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function RestaurantMarketplace() {
-  const [selectedCategory, setSelectedCategory] = useState<RestaurantCategory>("Tous");
-  const [clientLocation, setClientLocation] = useState<ClientLocation | null>(null);
-  const [locationMessage, setLocationMessage] = useState(
-    "Activez votre localisation pour voir les restaurants les plus proches.",
+function getRestaurantDistance(restaurant: Restaurant, client: ClientLocation) {
+  return client.coordinates ? getDistanceKm(client.coordinates, restaurant.coordinates) : restaurant.distanceKm;
+}
+
+function calculateDeliveryFee(restaurant: Restaurant, distanceKm: number, subtotal: number) {
+  if (restaurant.freeDelivery || subtotal >= 18000) return 0;
+  return roundTo50(clamp(restaurant.deliveryBase + distanceKm * 140 + subtotal * 0.015, 500, 2800));
+}
+
+function getGoogleMapsUrl(restaurant: Restaurant) {
+  const destination = `${restaurant.name} ${restaurant.address}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+}
+
+function haptic() {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    navigator.vibrate(12);
+  }
+}
+
+function cn(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+export default function Home() {
+  const [activeTab, setActiveTab] = useState<AppTab>("home");
+  const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
+  const [activeFilters, setActiveFilters] = useState<FilterId[]>([]);
+  const [location, setLocation] = useState<ClientLocation>({
+    label: "Bonamoussadi, Douala",
+    coordinates: null,
+  });
+  const [darkMode, setDarkMode] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<{ restaurant: Restaurant; item: MenuItem } | null>(null);
+  const [menuSearch, setMenuSearch] = useState("");
+  const [activeMenuCategory, setActiveMenuCategory] = useState<string>("Tous");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartLines, setCartLines] = useState<CartLine[]>([]);
+  const [favorites, setFavorites] = useState<string[]>(["maison-h", "tchop-yamo"]);
+  const [productDraft, setProductDraft] = useState({
+    quantity: 1,
+    size: "Normal",
+    sauce: "Douce",
+    drink: "Sans boisson",
+    extras: [] as string[],
+    note: "",
+  });
+  const [coupon, setCoupon] = useState("");
+  const [driverNote, setDriverNote] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Mobile Money");
+  const [deliveryTime, setDeliveryTime] = useState("Dès que possible");
+  const [tip, setTip] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const enrichedRestaurants = useMemo(
+    () =>
+      restaurants.map((restaurant) => {
+        const distanceKm = getRestaurantDistance(restaurant, location);
+        return {
+          ...restaurant,
+          liveDistanceKm: distanceKm,
+          liveDeliveryFee: calculateDeliveryFee(restaurant, distanceKm, restaurant.minOrder),
+        };
+      }),
+    [location],
   );
 
-  const filteredRestaurants = restaurants
-    .filter((restaurant) => selectedCategory === "Tous" || restaurant.category === selectedCategory)
-    .map((restaurant) => ({
-      ...restaurant,
-      distance: clientLocation ? getDistanceKm(clientLocation, restaurant.coordinates) : null,
-    }))
-    .sort((first, second) => {
-      if (first.distance === null || second.distance === null) return 0;
-      return first.distance - second.distance;
-    });
+  const filteredRestaurants = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
 
-  function detectClientLocation() {
+    return enrichedRestaurants.filter((restaurant) => {
+      const searchable = [
+        restaurant.name,
+        restaurant.description,
+        restaurant.cuisine,
+        restaurant.area,
+        ...restaurant.categories,
+        ...restaurant.menu.flatMap((section) => section.items.map((item) => item.name)),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery);
+      const matchesCategory = activeCategory === "all" || restaurant.categories.includes(activeCategory);
+      const matchesFilters = activeFilters.every((filter) => {
+        if (filter === "freeDelivery") return restaurant.freeDelivery;
+        if (filter === "pickup") return restaurant.pickup;
+        if (filter === "under20") return restaurant.etaMin <= 20;
+        if (filter === "under30") return restaurant.etaMax <= 30;
+        if (filter === "promotions") return Boolean(restaurant.promo);
+        if (filter === "topRated") return restaurant.rating >= 4.6;
+        if (filter === "open") return restaurant.isOpen;
+        if (filter === "lowPrice") return restaurant.minOrder <= 3500;
+        return true;
+      });
+
+      return matchesQuery && matchesCategory && matchesFilters;
+    });
+  }, [activeCategory, activeFilters, enrichedRestaurants, query]);
+
+  const cartRestaurant = cartLines.length
+    ? restaurants.find((restaurant) => restaurant.id === cartLines[0]?.restaurantId) ?? null
+    : null;
+  const cartDistance = cartRestaurant ? getRestaurantDistance(cartRestaurant, location) : 0;
+  const cartSubtotal = cartLines.reduce((sum, line) => {
+    const extrasTotal = line.item.extras
+      .filter((extra) => line.extras.includes(extra.name))
+      .reduce((total, extra) => total + extra.price, 0);
+    return sum + (line.item.price + extrasTotal) * line.quantity;
+  }, 0);
+  const serviceFee = cartSubtotal > 0 ? roundTo50(cartSubtotal * 0.025) : 0;
+  const taxes = cartSubtotal > 0 ? roundTo50(cartSubtotal * 0.015) : 0;
+  const discount = coupon.trim().toUpperCase() === "GOO20" ? roundTo50(cartSubtotal * 0.2) : 0;
+  const deliveryFee = cartRestaurant ? calculateDeliveryFee(cartRestaurant, cartDistance, cartSubtotal) : 0;
+  const cartTotal = cartSubtotal + serviceFee + taxes + deliveryFee + tip - discount;
+
+  function detectLocation() {
     if (!("geolocation" in navigator)) {
-      setLocationMessage("La localisation n’est pas disponible sur ce navigateur.");
+      setLocation((current) => ({ ...current, label: "Douala · position non disponible" }));
       return;
     }
-
-    setLocationMessage("Recherche de votre position...");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setClientLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
+        setLocation({
+          label: "Position actuelle · Douala",
+          coordinates: {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          },
         });
-        setLocationMessage("Distance estimée depuis votre position actuelle.");
       },
-      () => {
-        setLocationMessage("Localisation refusée. Les quartiers restent visibles.");
-      },
+      () => setLocation((current) => ({ ...current, label: "Douala · localisation refusée" })),
       { enableHighAccuracy: true, timeout: 9000, maximumAge: 60000 },
     );
   }
 
+  function toggleFilter(filter: FilterId) {
+    haptic();
+    setActiveFilters((current) =>
+      current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter],
+    );
+  }
+
+  function openRestaurant(restaurant: Restaurant) {
+    haptic();
+    setSelectedRestaurant(restaurant);
+    setMenuSearch("");
+    setActiveMenuCategory("Tous");
+  }
+
+  function openProduct(restaurant: Restaurant, item: MenuItem) {
+    haptic();
+    setSelectedProduct({ restaurant, item });
+    setProductDraft({
+      quantity: 1,
+      size: "Normal",
+      sauce: "Douce",
+      drink: "Sans boisson",
+      extras: [],
+      note: "",
+    });
+  }
+
+  function addProductToCart() {
+    if (!selectedProduct) return;
+    haptic();
+
+    setCartLines((current) => {
+      const nextLine: CartLine = {
+        restaurantId: selectedProduct.restaurant.id,
+        item: selectedProduct.item,
+        quantity: productDraft.quantity,
+        size: productDraft.size,
+        sauce: productDraft.sauce,
+        drink: productDraft.drink,
+        extras: productDraft.extras,
+        note: productDraft.note,
+      };
+
+      if (current.length && current[0]?.restaurantId !== selectedProduct.restaurant.id) {
+        return [nextLine];
+      }
+
+      return [...current, nextLine];
+    });
+
+    setSelectedProduct(null);
+    setCartOpen(true);
+  }
+
+  function updateCartQuantity(index: number, quantity: number) {
+    haptic();
+    setCartLines((current) =>
+      current
+        .map((line, lineIndex) => (lineIndex === index ? { ...line, quantity } : line))
+        .filter((line) => line.quantity > 0),
+    );
+  }
+
+  function toggleFavorite(id: string) {
+    haptic();
+    setFavorites((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
+  function refreshHome() {
+    setRefreshing(true);
+    window.setTimeout(() => setRefreshing(false), 850);
+  }
+
+  function sendOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!cartRestaurant || cartLines.length === 0) return;
+
+    const details = cartLines
+      .map(
+        (line) =>
+          `${line.quantity} x ${line.item.name} (${line.size}, ${line.sauce}, ${line.drink}) - ${formatPrice(
+            line.item.price * line.quantity,
+          )}`,
+      )
+      .join("\n");
+
+    const message = [
+      "Bonjour GOO Delivery, je souhaite commander.",
+      `Restaurant : ${cartRestaurant.name}`,
+      `Adresse client : ${location.label}`,
+      `Articles :\n${details}`,
+      `Sous-total : ${formatPrice(cartSubtotal)}`,
+      `Taxes : ${formatPrice(taxes)}`,
+      `Service : ${formatPrice(serviceFee)}`,
+      `Livraison : ${formatPrice(deliveryFee)}`,
+      `Pourboire : ${formatPrice(tip)}`,
+      `Réduction : ${formatPrice(discount)}`,
+      `Total : ${formatPrice(cartTotal)}`,
+      `Paiement : ${paymentMethod}`,
+      `Heure souhaitée : ${deliveryTime}`,
+      `Instructions : ${driverNote || "Aucune"}`,
+    ].join("\n");
+
+    window.open(`https://wa.me/237695502710?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  }
+
+  const screenClass = cn(
+    "min-h-screen overflow-x-hidden pb-28 transition-colors duration-500",
+    darkMode ? "bg-black text-white" : "bg-[#f7f8f7] text-black",
+  );
+
   return (
-    <div className="max-w-full overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl shadow-zinc-200 sm:p-5">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
-            Restaurants à Douala
-          </p>
-          <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-            Menus disponibles maintenant.
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-zinc-600">
-            Explorez les restaurants, fast-foods, cafés et cuisines chinoises. Les distances
-            s’ajustent si vous autorisez la localisation.
-          </p>
+    <main
+      className={screenClass}
+      style={{
+        fontFamily:
+          "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+      }}
+    >
+      <AppStyles />
+      <AppHeader
+        activeTab={activeTab}
+        cartCount={cartLines.reduce((sum, line) => sum + line.quantity, 0)}
+        darkMode={darkMode}
+        locationLabel={location.label}
+        query={query}
+        onCart={() => setCartOpen(true)}
+        onDarkMode={() => setDarkMode((current) => !current)}
+        onDetectLocation={detectLocation}
+        onQuery={setQuery}
+        onTab={setActiveTab}
+      />
+
+      <div className="mx-auto w-full max-w-[1480px] px-4 pb-10 pt-4 sm:px-6 lg:px-8">
+        {activeTab === "home" ? (
+          <HomeScreen
+            activeCategory={activeCategory}
+            activeFilters={activeFilters}
+            darkMode={darkMode}
+            filteredRestaurants={filteredRestaurants}
+            favorites={favorites}
+            location={location}
+            query={query}
+            refreshing={refreshing}
+            onCategory={setActiveCategory}
+            onFilter={toggleFilter}
+            onOpenRestaurant={openRestaurant}
+            onRefresh={refreshHome}
+            onToggleFavorite={toggleFavorite}
+          />
+        ) : null}
+
+        {activeTab === "explore" ? (
+          <ExploreScreen
+            activeCategory={activeCategory}
+            restaurants={filteredRestaurants}
+            query={query}
+            onCategory={setActiveCategory}
+            onOpenRestaurant={openRestaurant}
+          />
+        ) : null}
+
+        {activeTab === "orders" ? <OrdersScreen darkMode={darkMode} /> : null}
+
+        {activeTab === "favorites" ? (
+          <FavoritesScreen
+            favorites={favorites}
+            restaurants={enrichedRestaurants.filter((restaurant) => favorites.includes(restaurant.id))}
+            onOpenRestaurant={openRestaurant}
+            onToggleFavorite={toggleFavorite}
+          />
+        ) : null}
+
+        {activeTab === "profile" ? (
+          <ProfileScreen
+            darkMode={darkMode}
+            location={location}
+            onDarkMode={() => setDarkMode((current) => !current)}
+            onDetectLocation={detectLocation}
+          />
+        ) : null}
+      </div>
+
+      <BottomNavigation activeTab={activeTab} cartCount={cartLines.length} onTab={setActiveTab} />
+
+      {selectedRestaurant ? (
+        <RestaurantSheet
+          darkMode={darkMode}
+          favorite={favorites.includes(selectedRestaurant.id)}
+          location={location}
+          menuCategory={activeMenuCategory}
+          menuSearch={menuSearch}
+          restaurant={selectedRestaurant}
+          onClose={() => setSelectedRestaurant(null)}
+          onMenuCategory={setActiveMenuCategory}
+          onMenuSearch={setMenuSearch}
+          onOpenProduct={openProduct}
+          onToggleFavorite={() => toggleFavorite(selectedRestaurant.id)}
+        />
+      ) : null}
+
+      {selectedProduct ? (
+        <ProductSheet
+          draft={productDraft}
+          product={selectedProduct}
+          onAdd={addProductToCart}
+          onClose={() => setSelectedProduct(null)}
+          onDraft={setProductDraft}
+        />
+      ) : null}
+
+      {cartOpen ? (
+        <CartDrawer
+          cartLines={cartLines}
+          cartRestaurant={cartRestaurant}
+          coupon={coupon}
+          deliveryFee={deliveryFee}
+          deliveryTime={deliveryTime}
+          discount={discount}
+          driverNote={driverNote}
+          location={location}
+          paymentMethod={paymentMethod}
+          serviceFee={serviceFee}
+          subtotal={cartSubtotal}
+          taxes={taxes}
+          tip={tip}
+          total={cartTotal}
+          onClose={() => setCartOpen(false)}
+          onCoupon={setCoupon}
+          onDeliveryTime={setDeliveryTime}
+          onDriverNote={setDriverNote}
+          onPaymentMethod={setPaymentMethod}
+          onSubmit={sendOrder}
+          onTip={setTip}
+          onUpdateQuantity={updateCartQuantity}
+        />
+      ) : null}
+    </main>
+  );
+}
+
+function AppHeader({
+  activeTab,
+  cartCount,
+  darkMode,
+  locationLabel,
+  query,
+  onCart,
+  onDarkMode,
+  onDetectLocation,
+  onQuery,
+  onTab,
+}: {
+  activeTab: AppTab;
+  cartCount: number;
+  darkMode: boolean;
+  locationLabel: string;
+  query: string;
+  onCart: () => void;
+  onDarkMode: () => void;
+  onDetectLocation: () => void;
+  onQuery: (value: string) => void;
+  onTab: (tab: AppTab) => void;
+}) {
+  return (
+    <header
+      className={cn(
+        "sticky top-0 z-50 border-b backdrop-blur-2xl transition-colors duration-300",
+        darkMode ? "border-white/10 bg-black/86" : "border-black/5 bg-white/92",
+      )}
+    >
+      <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => onTab("home")}
+            className="flex min-w-0 items-center gap-3 rounded-[20px] transition-transform hover:scale-[1.01]"
+            aria-label="Accueil GOO Delivery"
+          >
+            <span className="relative h-12 w-16 overflow-hidden rounded-[18px] bg-white shadow-sm ring-1 ring-black/5 sm:w-20">
+              <Image src={logoSrc} alt="GOO Delivery" fill priority sizes="80px" className="object-contain p-1" />
+            </span>
+            <span className="hidden min-w-0 sm:block">
+              <span className="block text-left text-xs font-black uppercase tracking-[0.18em] text-[#00B140]">
+                GOO Delivery
+              </span>
+              <span className="block truncate text-left text-sm font-black">
+                Plus rapide. Plus simple.
+              </span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onDetectLocation}
+            className={cn(
+              "hidden min-w-0 flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-black transition hover:scale-[1.01] md:flex",
+              darkMode ? "bg-white/10 text-white" : "bg-[#f1f3f1] text-black",
+            )}
+          >
+            <Icon name="pin" className="h-5 w-5 text-[#00B140]" />
+            <span className="truncate">{locationLabel}</span>
+            <Icon name="chevron" className="h-4 w-4" />
+          </button>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <HeaderIconButton label="Mode sombre" name="moon" onClick={onDarkMode} />
+            <HeaderIconButton label="Notifications" name="bell" onClick={() => onTab("orders")} />
+            <HeaderIconButton label="Panier" name="cart" badge={cartCount} onClick={onCart} />
+            <HeaderIconButton label="Profil" name="profile" onClick={() => onTab("profile")} />
+          </div>
         </div>
 
         <button
           type="button"
-          onClick={detectClientLocation}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black sm:w-auto"
+          onClick={onDetectLocation}
+          className={cn(
+            "flex min-w-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-black transition md:hidden",
+            darkMode ? "bg-white/10 text-white" : "bg-[#f1f3f1] text-black",
+          )}
         >
-          <PinIcon className="h-4 w-4" />
-          Utiliser ma position
+          <Icon name="pin" className="h-5 w-5 text-[#00B140]" />
+          <span className="truncate">{locationLabel}</span>
+          <Icon name="chevron" className="h-4 w-4" />
         </button>
-      </div>
 
-      <div className="mt-5 flex max-w-full flex-wrap gap-2 pb-2">
-        {restaurantCategories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            onClick={() => setSelectedCategory(category)}
-            className={`rounded-full px-4 py-2 text-sm font-black transition ${
-              selectedCategory === category
-                ? "bg-[#22c55e] text-black"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-            }`}
+        <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
+          <label
+            className={cn(
+              "group flex min-w-0 items-center gap-3 rounded-[24px] px-4 py-3 shadow-sm ring-1 transition-all duration-300 focus-within:scale-[1.005] focus-within:ring-[#00B140]",
+              darkMode ? "bg-white/10 ring-white/10" : "bg-white ring-black/5",
+            )}
           >
-            {category}
-          </button>
-        ))}
+            <Icon name="search" className="h-5 w-5 shrink-0 text-[#00B140]" />
+            <input
+              value={query}
+              onChange={(event) => onQuery(event.target.value)}
+              placeholder="Rechercher restaurant, plat, boisson, épicerie, pharmacie..."
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:text-zinc-400 sm:text-base"
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => onQuery("")}
+                className="grid h-8 w-8 place-items-center rounded-full bg-zinc-100 text-black transition hover:bg-zinc-200"
+                aria-label="Effacer la recherche"
+              >
+                <Icon name="close" className="h-4 w-4" />
+              </button>
+            ) : null}
+          </label>
+
+          <nav className="hidden items-center rounded-full bg-black p-1 text-sm font-black text-white lg:flex">
+            {[
+              ["home", "Accueil"],
+              ["explore", "Explorer"],
+              ["orders", "Commandes"],
+              ["favorites", "Favoris"],
+              ["profile", "Profil"],
+            ].map(([tab, label]) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => onTab(tab as AppTab)}
+                className={cn(
+                  "rounded-full px-4 py-2 transition",
+                  activeTab === tab ? "bg-[#00B140] text-black" : "text-white/70 hover:text-white",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
+    </header>
+  );
+}
 
-      <p className="mt-2 text-xs font-semibold text-zinc-500">{locationMessage}</p>
+function HeaderIconButton({
+  badge,
+  label,
+  name,
+  onClick,
+}: {
+  badge?: number;
+  label: string;
+  name: IconName;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative grid h-11 w-11 place-items-center rounded-full bg-black text-white shadow-sm transition hover:scale-105 hover:bg-[#00B140] hover:text-black"
+      aria-label={label}
+    >
+      <Icon name={name} className="h-5 w-5" />
+      {badge ? (
+        <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#00B140] px-1 text-[10px] font-black text-black ring-2 ring-white">
+          {badge}
+        </span>
+      ) : null}
+    </button>
+  );
+}
 
-      <div className="mt-6 grid max-h-[660px] gap-4 overflow-y-auto pr-1">
-        {filteredRestaurants.map((restaurant) => (
-          <article
-            key={restaurant.name}
-            className="min-w-0 rounded-lg border border-zinc-200 p-4 transition hover:border-[#22c55e] hover:shadow-lg"
-          >
-            <div className="relative mb-4 h-48 overflow-hidden rounded-lg bg-zinc-100">
-              <div
-                aria-label={`Photo de ${restaurant.name}`}
-                className="absolute inset-0 bg-cover bg-center transition duration-500 hover:scale-105"
-                style={{ backgroundImage: `url(${restaurant.imageUrl})` }}
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <p className="text-sm font-black text-white">{restaurant.tags[0]}</p>
-                <p className="mt-1 text-xs font-semibold text-white/75">Photo illustrative du menu</p>
-              </div>
+function HomeScreen({
+  activeCategory,
+  activeFilters,
+  darkMode,
+  favorites,
+  filteredRestaurants,
+  location,
+  query,
+  refreshing,
+  onCategory,
+  onFilter,
+  onOpenRestaurant,
+  onRefresh,
+  onToggleFavorite,
+}: {
+  activeCategory: CategoryId;
+  activeFilters: FilterId[];
+  darkMode: boolean;
+  favorites: string[];
+  filteredRestaurants: Array<Restaurant & { liveDistanceKm: number; liveDeliveryFee: number }>;
+  location: ClientLocation;
+  query: string;
+  refreshing: boolean;
+  onCategory: (category: CategoryId) => void;
+  onFilter: (filter: FilterId) => void;
+  onOpenRestaurant: (restaurant: Restaurant) => void;
+  onRefresh: () => void;
+  onToggleFavorite: (id: string) => void;
+}) {
+  const popular = filteredRestaurants.filter((restaurant) => restaurant.reviews >= 450);
+  const topRated = filteredRestaurants.filter((restaurant) => restaurant.rating >= 4.6);
+  const newest = filteredRestaurants.filter((restaurant) => restaurant.isNew);
+  const fastest = filteredRestaurants.filter((restaurant) => restaurant.etaMin <= 22);
+  const nearby = [...filteredRestaurants].sort((a, b) => a.liveDistanceKm - b.liveDistanceKm);
+  const african = filteredRestaurants.filter((restaurant) => restaurant.categories.includes("africain"));
+  const pizza = filteredRestaurants.filter((restaurant) => restaurant.categories.includes("pizza"));
+  const asian = filteredRestaurants.filter((restaurant) => restaurant.categories.includes("asiatique"));
+  const drinks = filteredRestaurants.filter((restaurant) => restaurant.categories.includes("boissons"));
+
+  return (
+    <div className="space-y-8">
+      <HeroBand darkMode={darkMode} location={location} refreshing={refreshing} onRefresh={onRefresh} />
+      <CategoryRail activeCategory={activeCategory} onCategory={onCategory} />
+      <FilterRail activeFilters={activeFilters} onFilter={onFilter} />
+      <PromoSlider />
+
+      {refreshing ? <SkeletonRail /> : null}
+
+      {query ? (
+        <SectionRail
+          favorites={favorites}
+          restaurants={filteredRestaurants}
+          title={`Résultats pour “${query}”`}
+          onOpenRestaurant={onOpenRestaurant}
+          onToggleFavorite={onToggleFavorite}
+        />
+      ) : (
+        <>
+          <SectionRail
+            favorites={favorites}
+            restaurants={popular}
+            title="Les plus populaires"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <SectionRail
+            favorites={favorites}
+            restaurants={topRated}
+            title="Les mieux notés"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <SectionRail
+            favorites={favorites}
+            restaurants={newest}
+            title="Nouveaux restaurants"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <SectionRail
+            favorites={favorites}
+            restaurants={fastest}
+            title="Livraison rapide"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <SectionRail
+            favorites={favorites}
+            restaurants={nearby}
+            title="Près de chez vous"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <SectionRail
+            favorites={favorites}
+            restaurants={african}
+            title="Cuisine africaine"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <SectionRail
+            favorites={favorites}
+            restaurants={pizza}
+            title="Pizza"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <SectionRail
+            favorites={favorites}
+            restaurants={asian}
+            title="Asiatique"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <SectionRail
+            favorites={favorites}
+            restaurants={drinks}
+            title="Boissons et cafés"
+            onOpenRestaurant={onOpenRestaurant}
+            onToggleFavorite={onToggleFavorite}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function HeroBand({
+  darkMode,
+  location,
+  refreshing,
+  onRefresh,
+}: {
+  darkMode: boolean;
+  location: ClientLocation;
+  refreshing: boolean;
+  onRefresh: () => void;
+}) {
+  return (
+    <section
+      className={cn(
+        "relative overflow-hidden rounded-[28px] px-5 py-7 shadow-sm sm:px-8 lg:px-10",
+        darkMode ? "bg-white/8 ring-1 ring-white/10" : "bg-white",
+      )}
+    >
+      <div className="absolute -right-10 top-0 h-52 w-52 rounded-full bg-[#00B140]/20 blur-3xl" />
+      <div className="grid gap-7 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        <div className="relative min-w-0">
+          <p className="inline-flex rounded-full bg-[#00B140]/12 px-4 py-2 text-sm font-black text-[#008f35]">
+            Livraison moderne au Cameroun
+          </p>
+          <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.02] tracking-tight sm:text-5xl lg:text-7xl">
+            Commandez mieux. Recevez plus vite.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base font-semibold leading-8 text-zinc-500 sm:text-lg">
+            Restaurants, fast-food, pharmacies, courses et boissons autour de {location.label}. Une expérience
+            fluide, premium et pensée mobile.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <a
+              href={supportWhatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-full bg-[#00B140] px-6 py-4 text-sm font-black text-black shadow-[0_18px_50px_rgba(0,177,64,0.28)] transition hover:scale-[1.02]"
+            >
+              Commander sur WhatsApp
+            </a>
+            <button
+              type="button"
+              onClick={onRefresh}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 px-6 py-4 text-sm font-black transition hover:border-[#00B140] hover:text-[#008f35]"
+            >
+              <Icon name="spark" className={cn("h-5 w-5", refreshing && "animate-spin")} />
+              Actualiser les offres
+            </button>
+          </div>
+        </div>
+
+        <div className="relative min-h-[260px] overflow-hidden rounded-[28px] bg-black p-5 text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,177,64,0.5),transparent_34%),linear-gradient(135deg,#050505,#111)]" />
+          <div className="relative grid h-full content-between gap-6">
+            <div className="flex items-center justify-between gap-3">
+              <span className="rounded-full bg-white/10 px-4 py-2 text-sm font-black">GOO Live</span>
+              <span className="rounded-full bg-[#00B140] px-4 py-2 text-sm font-black text-black">60 FPS UI</span>
             </div>
-
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="break-words text-2xl font-black">{restaurant.name}</h3>
-                  <span className="rounded-full bg-[#22c55e]/15 px-3 py-1 text-xs font-black text-[#15803d]">
-                    {restaurant.category}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm font-semibold text-zinc-600">
-                  {restaurant.area} • {restaurant.address}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {restaurant.tags.map((tag) => (
-                    <span key={tag} className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="w-full rounded-lg bg-black px-4 py-3 text-white sm:w-auto sm:min-w-32 sm:text-right">
-                <p className="text-sm font-black text-[#22c55e]">★ {restaurant.rating}</p>
-                <p className="mt-1 text-sm font-bold">{restaurant.deliveryTime}</p>
-                <p className="mt-1 text-sm font-bold">
-                  {restaurant.distance === null ? restaurant.area : `${restaurant.distance.toFixed(1)} km`}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {restaurant.menu.map((item) => (
-                <div key={item.name} className="flex min-w-0 items-center justify-between gap-3 rounded-lg bg-zinc-50 px-4 py-3">
-                  <p className="min-w-0 break-words text-sm font-black">{item.name}</p>
-                  <p className="shrink-0 text-sm font-black text-[#16a34a]">{formatPrice(item.price)}</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                ["18 min", "livraison rapide"],
+                ["4.7", "note moyenne"],
+                ["0 FCFA", "offres livraison"],
+              ].map(([value, label]) => (
+                <div key={label} className="rounded-[22px] bg-white/10 p-4 backdrop-blur">
+                  <p className="text-2xl font-black">{value}</p>
+                  <p className="mt-1 text-xs font-bold text-white/60">{label}</p>
                 </div>
               ))}
             </div>
-
-            <a
-              href={`${whatsappUrl}%20Restaurant%20:%20${encodeURIComponent(restaurant.name)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#22c55e] px-5 py-3 text-sm font-black text-black transition hover:bg-green-400"
-            >
-              Commander chez {restaurant.name}
-            </a>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function AccountAccess({ compact = false }: { compact?: boolean }) {
-  const [authMode, setAuthMode] = useState<AuthMode>("signup");
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
-  const [authStep, setAuthStep] = useState<AuthStep>("details");
-  const [form, setForm] = useState<AccountForm>(defaultForm);
-  const [otp, setOtp] = useState("");
-  const [locationStatus, setLocationStatus] = useState(
-    "Ville détectée automatiquement si vous l’autorisez.",
-  );
-  const [formMessage, setFormMessage] = useState("");
-
-  const isSignup = authMode === "signup";
-  const identifierLabel = authMethod === "phone" ? "Numéro de téléphone" : "Adresse email";
-  const identifierPlaceholder = authMethod === "phone" ? "+237 6XX XXX XXX" : "exemple@email.com";
-
-  function updateField(field: keyof AccountForm, value: string) {
-    setForm((current) => ({ ...current, [field]: value }));
-  }
-
-  function switchMode(mode: AuthMode) {
-    setAuthMode(mode);
-    setAuthStep("details");
-    setOtp("");
-    setFormMessage("");
-  }
-
-  function switchMethod(method: AuthMethod) {
-    setAuthMethod(method);
-    setOtp("");
-    setFormMessage("");
-  }
-
-  async function detectLocation() {
-    if (!("geolocation" in navigator)) {
-      setLocationStatus("La géolocalisation n’est pas disponible sur ce navigateur.");
-      return;
-    }
-
-    setLocationStatus("Détection de votre position en cours...");
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
-          );
-          const data = (await response.json()) as {
-            address?: {
-              city?: string;
-              town?: string;
-              village?: string;
-              state?: string;
-              country?: string;
-            };
-          };
-          const city =
-            data.address?.city ??
-            data.address?.town ??
-            data.address?.village ??
-            data.address?.state ??
-            "Position détectée";
-          const country = data.address?.country ? `, ${data.address.country}` : "";
-
-          updateField("city", `${city}${country}`);
-          setLocationStatus("Ville détectée. Vous pouvez la modifier si besoin.");
-        } catch {
-          updateField("city", `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-          setLocationStatus("Position détectée, mais la ville n’a pas pu être convertie automatiquement.");
-        }
-      },
-      () => {
-        setLocationStatus("Autorisez la localisation ou renseignez votre ville manuellement.");
-      },
-      { enableHighAccuracy: true, timeout: 9000, maximumAge: 60000 },
-    );
-  }
-
-  function submitDetails(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFormMessage("");
-
-    if (!form.identifier.trim()) {
-      setFormMessage(`Entrez votre ${identifierLabel.toLowerCase()} pour continuer.`);
-      return;
-    }
-
-    if (authMethod === "phone" && !/^((\+237|237)?\s?6|6)\d[\d\s]{7,}$/.test(form.identifier.trim())) {
-      setFormMessage("Entrez un numéro de téléphone valide, par exemple +237 695 502 710.");
-      return;
-    }
-
-    if (isSignup && (!form.firstName || !form.lastName || !form.birthDate || !form.city)) {
-      setFormMessage("Complétez votre nom, prénom, date de naissance et ville avant la vérification.");
-      return;
-    }
-
-    setAuthStep("verify");
-    setFormMessage(
-      authMethod === "phone"
-        ? `Code envoyé au ${form.identifier}. Code démo : ${demoOtp}`
-        : `Code envoyé à ${form.identifier}. Code démo : ${demoOtp}`,
-    );
-  }
-
-  function verifyAccount(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (otp.trim() !== demoOtp) {
-      setFormMessage(`Code incorrect pour la démo. Utilisez ${demoOtp}.`);
-      return;
-    }
-
-    setAuthStep("success");
-    setFormMessage(
-      isSignup
-        ? "Compte GOO Delivery créé. Vous pouvez maintenant commander plus rapidement."
-        : "Connexion réussie. Vous pouvez continuer votre commande.",
-    );
-  }
-
-  return (
-    <div className={`rounded-lg border border-zinc-200 bg-white p-5 shadow-xl shadow-zinc-200 ${compact ? "w-full" : ""}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#22c55e]">
-            Compte client
-          </p>
-          <h3 className="mt-2 text-2xl font-black">{isSignup ? "Créer un compte" : "Se connecter"}</h3>
-        </div>
-        <span className="rounded-full bg-black px-3 py-1 text-xs font-black text-white">Client</span>
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 rounded-full bg-zinc-100 p-1 text-sm font-black">
-        <button
-          type="button"
-          onClick={() => switchMode("signup")}
-          className={`rounded-full px-4 py-2 transition ${isSignup ? "bg-black text-white" : "text-zinc-600"}`}
-        >
-          Inscription
-        </button>
-        <button
-          type="button"
-          onClick={() => switchMode("login")}
-          className={`rounded-full px-4 py-2 transition ${!isSignup ? "bg-black text-white" : "text-zinc-600"}`}
-        >
-          Connexion
-        </button>
-      </div>
-
-      {authStep === "details" ? (
-        <form onSubmit={submitDetails} className="mt-5 grid gap-4">
-          <div className="grid grid-cols-2 gap-2 rounded-lg border border-zinc-200 p-1 text-sm font-black">
-            <button
-              type="button"
-              onClick={() => switchMethod("phone")}
-              className={`rounded-md px-3 py-2 transition ${authMethod === "phone" ? "bg-[#22c55e] text-black" : "text-zinc-600"}`}
-            >
-              Téléphone
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMethod("email")}
-              className={`rounded-md px-3 py-2 transition ${authMethod === "email" ? "bg-[#22c55e] text-black" : "text-zinc-600"}`}
-            >
-              Email
-            </button>
-          </div>
-
-          <label className="grid gap-2 text-sm font-bold text-zinc-700">
-            {identifierLabel}
-            <input
-              value={form.identifier}
-              onChange={(event) => updateField("identifier", event.target.value)}
-              type={authMethod === "email" ? "email" : "tel"}
-              placeholder={identifierPlaceholder}
-              className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
-            />
-          </label>
-
-          {isSignup ? (
-            <>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="grid gap-2 text-sm font-bold text-zinc-700">
-                  Prénom
-                  <input
-                    value={form.firstName}
-                    onChange={(event) => updateField("firstName", event.target.value)}
-                    className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
-                    placeholder="Votre prénom"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-bold text-zinc-700">
-                  Nom
-                  <input
-                    value={form.lastName}
-                    onChange={(event) => updateField("lastName", event.target.value)}
-                    className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
-                    placeholder="Votre nom"
-                  />
-                </label>
+            <div className="relative overflow-hidden rounded-[24px] bg-white p-4 text-black">
+              <div className="flex items-center gap-3">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#00B140] text-xl font-black">
+                  G
+                </span>
+                <div>
+                  <p className="text-sm font-black">Commande en route</p>
+                  <p className="text-xs font-bold text-zinc-500">Livreur à 7 minutes · Bonamoussadi</p>
+                </div>
               </div>
-
-              <label className="grid gap-2 text-sm font-bold text-zinc-700">
-                Date de naissance
-                <input
-                  value={form.birthDate}
-                  onChange={(event) => updateField("birthDate", event.target.value)}
-                  type="date"
-                  className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
-                />
-              </label>
-
-              <div className="grid gap-2">
-                <label className="grid gap-2 text-sm font-bold text-zinc-700">
-                  Ville / localisation
-                  <input
-                    value={form.city}
-                    onChange={(event) => updateField("city", event.target.value)}
-                    className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
-                    placeholder="Douala, Yaoundé, Bafoussam..."
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={detectLocation}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-200 px-4 py-3 text-sm font-black transition hover:border-[#22c55e] hover:text-[#22c55e]"
-                >
-                  <PinIcon className="h-4 w-4" />
-                  Détecter ma ville automatiquement
-                </button>
-                <p className="text-xs font-medium text-zinc-500">{locationStatus}</p>
-              </div>
-
-              <label className="grid gap-2 text-sm font-bold text-zinc-700">
-                Moyen de paiement préféré
-                <select
-                  value={form.paymentMethod}
-                  onChange={(event) => updateField("paymentMethod", event.target.value)}
-                  className="rounded-lg border border-zinc-200 px-4 py-3 outline-none transition focus:border-[#22c55e]"
-                >
-                  {paymentMethods.map((method) => (
-                    <option key={method}>{method}</option>
-                  ))}
-                </select>
-              </label>
-            </>
-          ) : null}
-
-          {formMessage ? <p className="rounded-lg bg-zinc-100 p-3 text-sm font-semibold text-zinc-700">{formMessage}</p> : null}
-
-          <button
-            type="submit"
-            className="rounded-full bg-[#22c55e] px-6 py-4 font-black text-black transition hover:-translate-y-0.5 hover:bg-green-400"
-          >
-            {isSignup ? "S’inscrire" : "Se connecter"}
-          </button>
-        </form>
-      ) : null}
-
-      {authStep === "verify" ? (
-        <form onSubmit={verifyAccount} className="mt-5 grid gap-4">
-          <div className="rounded-lg bg-black p-4 text-white">
-            <p className="text-sm font-black text-[#22c55e]">Vérification</p>
-            <p className="mt-2 text-sm text-zinc-300">
-              Entrez le code à 6 chiffres reçu par {authMethod === "phone" ? "SMS" : "email"}. Démo : {demoOtp}
-            </p>
-          </div>
-          <input
-            value={otp}
-            onChange={(event) => setOtp(event.target.value)}
-            inputMode="numeric"
-            maxLength={6}
-            placeholder="000000"
-            className="w-full max-w-full rounded-lg border border-zinc-200 px-4 py-4 text-center text-2xl font-black tracking-[0.14em] sm:tracking-[0.24em] outline-none transition focus:border-[#22c55e] sm:tracking-[0.35em]"
-          />
-          {formMessage ? <p className="rounded-lg bg-zinc-100 p-3 text-sm font-semibold text-zinc-700">{formMessage}</p> : null}
-          <button
-            type="submit"
-            className="rounded-full bg-black px-6 py-4 font-black text-white transition hover:-translate-y-0.5 hover:bg-zinc-900"
-          >
-            Vérifier et continuer
-          </button>
-          <button
-            type="button"
-            onClick={() => setAuthStep("details")}
-            className="text-sm font-black text-zinc-500 transition hover:text-[#22c55e]"
-          >
-            Modifier mes informations
-          </button>
-        </form>
-      ) : null}
-
-      {authStep === "success" ? (
-        <div className="mt-5 rounded-lg bg-[#22c55e] p-5 text-black">
-          <CheckIcon className="h-8 w-8" />
-          <h4 className="mt-4 text-2xl font-black">Accès sécurisé</h4>
-          <p className="mt-2 font-semibold">{formMessage}</p>
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex rounded-full bg-black px-5 py-3 text-sm font-black text-white"
-          >
-            Commander maintenant
-          </a>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function CampaignPanel() {
-  return (
-    <section id="campagne" className="bg-black px-5 py-20 text-white sm:px-8 lg:py-24">
-      <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-        <div className="min-w-0">
-          <LogoImage size="lg" priority surface="dark" />
-          <p className="mt-8 text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
-            Campagne GOO Delivery
-          </p>
-          <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
-            Une présence premium pour une livraison plus crédible.
-          </h2>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
-            Le site reprend l&apos;énergie des affiches GOO Delivery : vitesse, confiance,
-            service professionnel et codes visuels noir, blanc et vert lime.
-          </p>
-        </div>
-
-        <div className="relative max-w-full overflow-hidden rounded-lg border border-white/10 bg-white p-5 text-black shadow-2xl shadow-black/40 sm:p-6">
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[#22c55e]" />
-          <div className="relative grid gap-6 md:grid-cols-[0.8fr_1fr] md:items-center">
-            <div className="min-w-0">
-              <LogoImage size="lg" />
-              <h3 className="mt-8 text-4xl font-black leading-tight">
-                Plus rapide.
-                <span className="block text-[#22c55e]">Plus simple.</span>
-                Toujours là.
-              </h3>
-            </div>
-            <div className="relative min-h-64 sm:min-h-72">
-              <div className="absolute bottom-0 right-[-2rem] h-64 w-64 sm:right-0 sm:h-72 sm:w-72">
-                <RiderIllustration />
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-100">
+                <div className="goo-progress h-full rounded-full bg-[#00B140]" />
               </div>
             </div>
           </div>
@@ -1151,612 +1471,1348 @@ function CampaignPanel() {
   );
 }
 
-function RiderIllustration() {
+function CategoryRail({
+  activeCategory,
+  onCategory,
+}: {
+  activeCategory: CategoryId;
+  onCategory: (category: CategoryId) => void;
+}) {
   return (
-    <svg aria-hidden="true" className="h-full w-full" viewBox="0 0 320 430" fill="none">
-      <path d="M145 78c30-17 74-8 96 20 28 36 32 97 10 135-20 34-60 44-96 30-32-13-57-44-63-81-7-42 17-84 53-104Z" fill="#111" />
-      <path d="M111 142c24-44 74-62 119-44 25 10 44 31 57 61 10 25 13 52 11 82l-60 4c-1-49-19-83-54-102-23-12-48-11-73-1Z" fill="#22c55e" />
-      <path d="M176 52c22-4 41 7 45 25 4 19-11 36-34 40-22 4-42-7-45-25-4-18 11-36 34-40Z" fill="#050505" />
-      <path d="M63 267c23-32 71-45 119-35 47 9 88 39 103 75H63v-40Z" fill="#0a0a0a" />
-      <path d="M72 291h196c20 0 37 16 37 37v11H42v-18c0-17 13-30 30-30Z" fill="#111827" />
-      <path d="M78 364a44 44 0 1 0 0-88 44 44 0 0 0 0 88Z" fill="#050505" />
-      <path d="M78 343a23 23 0 1 0 0-46 23 23 0 0 0 0 46Z" fill="#f8fafc" />
-      <path d="M256 364a44 44 0 1 0 0-88 44 44 0 0 0 0 88Z" fill="#050505" />
-      <path d="M256 343a23 23 0 1 0 0-46 23 23 0 0 0 0 46Z" fill="#f8fafc" />
-      <path d="M117 252h105c12 0 23 8 27 19l8 20H83l15-25c4-9 11-14 19-14Z" fill="#1f2937" />
-      <path d="M210 194h69c8 0 15 7 15 15v50h-99v-50c0-8 7-15 15-15Z" fill="#111" />
-      <path d="M210 208h68" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" />
-      <path d="M135 138c-9 31-3 61 18 88" stroke="#050505" strokeWidth="20" strokeLinecap="round" />
-      <path d="M188 153c3 32-6 62-27 91" stroke="#050505" strokeWidth="19" strokeLinecap="round" />
-      <path d="M171 247c20 8 38 20 54 36" stroke="#050505" strokeWidth="18" strokeLinecap="round" />
-      <path d="M122 254c-13 21-23 44-30 70" stroke="#050505" strokeWidth="18" strokeLinecap="round" />
-      <text x="212" y="242" fill="white" fontSize="28" fontWeight="900">
-        GOO
-      </text>
-    </svg>
-  );
-}
-
-function ArrowIcon({ className = "h-4 w-4" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
-    </svg>
-  );
-}
-
-function CheckIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m5 12 4 4L19 6" />
-    </svg>
-  );
-}
-
-function FoodIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 11h16" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 11a6 6 0 0 1 12 0" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 15h14l-1 4H6l-1-4Z" />
-    </svg>
-  );
-}
-
-function CartIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 5h2l2.5 10h9L20 8H8" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 20h.01M18 20h.01" />
-    </svg>
-  );
-}
-
-function BoxIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m4 7.5 8 4.5 8-4.5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 12v9" />
-    </svg>
-  );
-}
-
-function DocumentIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 3h7l3 3v15H7V3Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14 3v4h4" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6M9 16h6" />
-    </svg>
-  );
-}
-
-function PharmacyIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6V4Z" />
-    </svg>
-  );
-}
-
-function BuildingIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 21V5l7-3 7 3v16" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h6" />
-    </svg>
-  );
-}
-
-function BikeIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 14h4l2-5h-3" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m14 9 2 5h3" />
-    </svg>
-  );
-}
-
-function CarIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 17h14" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 17v-5l2-5h8l2 5v5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 12h10" />
-    </svg>
-  );
-}
-
-function VanIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 17h18V8a3 3 0 0 0-3-3H3v12Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 8h3l3 4v5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
-    </svg>
-  );
-}
-
-function SpeedIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 13a8 8 0 0 1 15.5-2" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m13 13 5-5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 19h14" />
-    </svg>
-  );
-}
-
-function ShieldIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3 5 6v6c0 4.4 2.8 7.4 7 9 4.2-1.6 7-4.6 7-9V6l-7-3Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m9 12 2 2 4-5" />
-    </svg>
-  );
-}
-
-function LockIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 10V8a5 5 0 0 1 10 0v2" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 10h12v10H6V10Z" />
-    </svg>
-  );
-}
-
-function WhatsAppIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4a8 8 0 0 0-6.8 12.2L4 20l3.9-1A8 8 0 1 0 12 4Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9c.5 3 2.5 5 6 6" />
-    </svg>
-  );
-}
-
-function PinIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5h.01" />
-    </svg>
-  );
-}
-
-function BriefcaseIcon({ className = "h-7 w-7" }: IconProps) {
-  return (
-    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 7V5h6v2" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16v12H4V7Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 12h16" />
-    </svg>
-  );
-}
-
-export default function Home() {
-  const [accountOpen, setAccountOpen] = useState(false);
-
-  return (
-    <main id="accueil" className="min-h-screen overflow-x-hidden bg-white text-black">
-      <nav className="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
-          <a href="#accueil" className="flex min-w-0 items-center gap-3" aria-label="GOO Delivery">
-            <LogoImage size="sm" priority />
-            <span className="hidden text-lg font-black tracking-tight sm:inline">
-              GOO <span className="text-[#22c55e]">Delivery</span>
+    <section className="space-y-4">
+      <SectionTitle title="Catégories" action="Filtrage instantané" />
+      <div className="goo-scrollbar flex gap-3 overflow-x-auto pb-2">
+        {categories.map((category) => (
+          <button
+            key={category.id}
+            type="button"
+            onClick={() => {
+              haptic();
+              onCategory(category.id);
+            }}
+            className={cn(
+              "group min-w-[116px] rounded-[24px] p-4 text-left shadow-sm transition duration-300 hover:-translate-y-1",
+              activeCategory === category.id
+                ? "bg-black text-white"
+                : "bg-white text-black hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]",
+            )}
+          >
+            <span
+              className={cn(
+                "grid h-12 w-12 place-items-center rounded-2xl text-2xl transition",
+                activeCategory === category.id ? "bg-[#00B140] text-black" : "bg-[#00B140]/12 text-[#008f35]",
+              )}
+            >
+              {category.icon}
             </span>
-          </a>
+            <span className="mt-3 block text-sm font-black">{category.label}</span>
+            <span className={cn("mt-1 block text-xs font-bold", activeCategory === category.id ? "text-white/60" : "text-zinc-500")}>
+              {category.hint}
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-          <div className="hidden items-center gap-7 text-sm font-bold text-zinc-700 lg:flex">
-            {navLinks.map((link) => (
-              <a key={link.href} className="transition hover:text-[#22c55e]" href={link.href}>
-                {link.label}
-              </a>
-            ))}
+function FilterRail({
+  activeFilters,
+  onFilter,
+}: {
+  activeFilters: FilterId[];
+  onFilter: (filter: FilterId) => void;
+}) {
+  return (
+    <section className="goo-scrollbar flex gap-2 overflow-x-auto pb-1">
+      {filters.map((filter) => {
+        const active = activeFilters.includes(filter.id);
+        return (
+          <button
+            key={filter.id}
+            type="button"
+            onClick={() => onFilter(filter.id)}
+            className={cn(
+              "shrink-0 rounded-full px-4 py-3 text-sm font-black shadow-sm transition hover:scale-[1.02]",
+              active ? "bg-[#00B140] text-black" : "bg-white text-black hover:bg-zinc-50",
+            )}
+          >
+            {filter.label}
+          </button>
+        );
+      })}
+    </section>
+  );
+}
+
+function PromoSlider() {
+  return (
+    <section className="overflow-hidden rounded-[28px] bg-black p-3 text-white">
+      <div className="goo-promo-track flex gap-3">
+        {[...promoSlides, ...promoSlides].map((slide, index) => (
+          <article
+            key={`${slide.title}-${index}`}
+            className="min-w-[86vw] rounded-[24px] bg-[linear-gradient(135deg,#00B140,#101010)] p-6 shadow-sm sm:min-w-[520px]"
+          >
+            <p className="inline-flex rounded-full bg-black/30 px-3 py-1 text-xs font-black">{slide.badge}</p>
+            <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">{slide.title}</h2>
+            <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-white/80">{slide.text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SectionRail({
+  favorites,
+  restaurants,
+  title,
+  onOpenRestaurant,
+  onToggleFavorite,
+}: {
+  favorites: string[];
+  restaurants: Array<Restaurant & { liveDistanceKm?: number; liveDeliveryFee?: number }>;
+  title: string;
+  onOpenRestaurant: (restaurant: Restaurant) => void;
+  onToggleFavorite: (id: string) => void;
+}) {
+  if (restaurants.length === 0) return null;
+
+  return (
+    <section className="space-y-4">
+      <SectionTitle title={title} action="Voir tout" />
+      <div className="goo-scrollbar flex snap-x gap-4 overflow-x-auto pb-3">
+        {restaurants.map((restaurant) => (
+          <RestaurantCard
+            key={restaurant.id}
+            favorite={favorites.includes(restaurant.id)}
+            restaurant={restaurant}
+            onOpen={() => onOpenRestaurant(restaurant)}
+            onToggleFavorite={() => onToggleFavorite(restaurant.id)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RestaurantCard({
+  favorite,
+  restaurant,
+  onOpen,
+  onToggleFavorite,
+}: {
+  favorite: boolean;
+  restaurant: Restaurant & { liveDistanceKm?: number; liveDeliveryFee?: number };
+  onOpen: () => void;
+  onToggleFavorite: () => void;
+}) {
+  const distanceKm = restaurant.liveDistanceKm ?? restaurant.distanceKm;
+  const deliveryFee = restaurant.liveDeliveryFee ?? restaurant.deliveryBase;
+
+  return (
+    <article className="group w-[82vw] max-w-[360px] shrink-0 snap-start rounded-[26px] bg-white p-3 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(0,0,0,0.12)] sm:w-[330px]">
+      <button type="button" onClick={onOpen} className="block w-full text-left">
+        <div className="relative h-52 overflow-hidden rounded-[22px] bg-zinc-100">
+          <div
+            className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-105"
+            style={{ backgroundImage: `url(${restaurant.cover})` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/64 via-black/5 to-transparent" />
+          <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+            {restaurant.promo ? <Badge tone="green">{restaurant.promo}</Badge> : null}
+            {restaurant.isNew ? <Badge>Nouveau</Badge> : null}
+            {restaurant.isTopRated ? <Badge>Top Rated</Badge> : null}
+            {restaurant.freeDelivery ? <Badge tone="green">Livraison gratuite</Badge> : null}
           </div>
-
-          <div className="hidden items-center gap-3 md:flex">
-            <button
-              type="button"
-              onClick={() => setAccountOpen(true)}
-              className="rounded-full border border-zinc-300 px-5 py-3 text-sm font-black transition hover:border-[#22c55e] hover:text-[#22c55e]"
-            >
-              Connexion
-            </button>
-            <button
-              type="button"
-              onClick={() => setAccountOpen(true)}
-              className="rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black"
-            >
-              Créer un compte
-            </button>
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-3">
+            <span className={cn("grid h-12 w-12 place-items-center rounded-2xl text-lg font-black text-white ring-2 ring-white", restaurant.logoTone)}>
+              {restaurant.shortName}
+            </span>
+            <span className={cn("rounded-full px-3 py-1 text-xs font-black", restaurant.isOpen ? "bg-white text-black" : "bg-zinc-900 text-white")}>
+              {restaurant.isOpen ? "Ouvert" : "Fermé"}
+            </span>
           </div>
+        </div>
+      </button>
 
+      <div className="px-1 pb-2 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <button type="button" onClick={onOpen} className="min-w-0 text-left">
+            <h3 className="truncate text-xl font-black text-black">{restaurant.name}</h3>
+            <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-zinc-500">{restaurant.description}</p>
+          </button>
           <button
             type="button"
-            onClick={() => setAccountOpen(true)}
-            className="rounded-full bg-black px-4 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black md:hidden"
+            onClick={onToggleFavorite}
+            className={cn(
+              "grid h-10 w-10 shrink-0 place-items-center rounded-full transition hover:scale-105",
+              favorite ? "bg-[#00B140] text-black" : "bg-zinc-100 text-black",
+            )}
+            aria-label="Ajouter aux favoris"
           >
-            Compte
+            <Icon name="heart" className="h-5 w-5" filled={favorite} />
           </button>
         </div>
-      </nav>
 
-      {accountOpen ? (
-        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/60 px-4 py-8 backdrop-blur-sm">
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-4 shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setAccountOpen(false)}
-              className="absolute right-4 top-4 z-10 rounded-full bg-black px-4 py-2 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black"
-            >
-              Fermer
-            </button>
-            <AccountAccess compact />
-          </div>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <Metric value={`★ ${restaurant.rating}`} label={`${restaurant.reviews} avis`} />
+          <Metric value={`${restaurant.etaMin}-${restaurant.etaMax}`} label="min" />
+          <Metric value={`${distanceKm.toFixed(1)} km`} label={formatPrice(deliveryFee)} />
         </div>
-      ) : null}
 
-      <section className="overflow-hidden bg-[linear-gradient(135deg,#ffffff_0%,#f4f4f5_45%,#0a0a0a_45%,#0a0a0a_100%)] px-5 py-14 sm:px-8 lg:py-20">
-        <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-12 lg:grid-cols-[0.94fr_1.06fr] lg:items-center">
-          <div className="min-w-0">
-            <LogoImage size="lg" priority />
-            <p className="mt-8 text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
-              Plus rapide. Plus simple. Toujours là.
-            </p>
-            <h1 className="mt-4 max-w-3xl break-words text-4xl font-black leading-none tracking-tight min-[380px]:text-5xl sm:text-6xl lg:text-7xl">
-              Restaurants de Douala livrés rapidement.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-700">
-              Choisissez un restaurant, consultez les menus en FCFA, estimez la distance
-              depuis votre position et commandez avec GOO Delivery.
-            </p>
-
-            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-              <PrimaryButton href={whatsappUrl}>Commander sur WhatsApp</PrimaryButton>
-              <SecondaryButton href="#restaurants">Voir les restaurants</SecondaryButton>
-            </div>
-
-            <div className="mt-10 grid max-w-xl grid-cols-1 gap-3 sm:grid-cols-3">
-              {stats.map((stat) => (
-                <div key={stat.label} className="border-l border-zinc-300 pl-4">
-                  <p className="text-3xl font-black">{stat.value}</p>
-                  <p className="mt-1 text-sm font-semibold text-zinc-600">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div id="restaurants" className="grid min-w-0 gap-5">
-            <RestaurantMarketplace />
-          </div>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <span className="text-xs font-black text-zinc-500">Min. {formatPrice(restaurant.minOrder)}</span>
+          {restaurant.isVerified ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#00B140]/12 px-3 py-1 text-xs font-black text-[#008f35]">
+              <Icon name="check" className="h-3.5 w-3.5" />
+              Vérifié
+            </span>
+          ) : null}
         </div>
-      </section>
-      <section id="services" className="px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto w-full max-w-7xl min-w-0">
-          <SectionHeader
-            eyebrow="Services"
-            title="Toutes vos livraisons, dans une seule expérience."
-            description="GOO Delivery couvre les besoins du quotidien et les opérations professionnelles avec un service clair, rapide et premium."
-          />
+      </div>
+    </article>
+  );
+}
 
-          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => {
-              const Icon = service.Icon;
+function Badge({ children, tone = "dark" }: { children: React.ReactNode; tone?: "dark" | "green" }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full px-3 py-1 text-xs font-black backdrop-blur",
+        tone === "green" ? "bg-[#00B140] text-black" : "bg-black/70 text-white",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
 
-              return (
-                <article
-                  key={service.title}
-                  className="group min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-[#22c55e] hover:shadow-xl sm:p-7"
-                >
-                  <div className="grid h-14 w-14 place-items-center rounded-lg bg-black text-[#22c55e] transition group-hover:bg-[#22c55e] group-hover:text-black">
-                    <Icon />
-                  </div>
-                  <h3 className="mt-7 break-words text-2xl font-black">{service.title}</h3>
-                  <p className="mt-3 leading-7 text-zinc-600">{service.description}</p>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-zinc-50 px-2 py-3">
+      <p className="text-sm font-black text-black">{value}</p>
+      <p className="mt-1 truncate text-[11px] font-bold text-zinc-500">{label}</p>
+    </div>
+  );
+}
 
-      <section id="fonctionnement" className="bg-black px-5 py-20 text-white sm:px-8 lg:py-24">
-        <div className="mx-auto w-full max-w-7xl min-w-0">
-          <SectionHeader
-            eyebrow="Comment ça marche"
-            title="Trois étapes simples, une livraison maîtrisée."
-            description="Le parcours reste direct pour le client et professionnel côté opération."
-            inverted
-          />
-
-          <div className="mt-14 grid gap-4 lg:grid-cols-3">
-            {steps.map((step, index) => (
-              <article key={step.title} className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-6 sm:p-7">
-                <span className="grid h-12 w-12 place-items-center rounded-lg bg-[#22c55e] text-xl font-black text-black">
-                  {index + 1}
-                </span>
-                <h3 className="mt-7 break-words text-2xl font-black">{step.title}</h3>
-                <p className="mt-3 leading-7 text-zinc-300">{step.description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="entreprises" className="w-full max-w-full overflow-hidden bg-white">
-        <div className="grid w-full min-w-0 max-w-full overflow-hidden lg:min-h-[610px] lg:grid-cols-[0.54fr_0.46fr]">
-          <div className="relative z-10 flex w-full min-w-0 max-w-full items-center overflow-hidden bg-black px-5 py-16 text-white sm:px-8 sm:py-20 lg:px-16 xl:px-24">
-            <div className="pointer-events-none absolute inset-y-0 -right-14 hidden w-28 skew-x-[-7deg] bg-black lg:block" />
-            <div className="relative w-full min-w-0 max-w-2xl">
-              <LogoImage size="md" surface="dark" />
-              <p className="mt-10 break-words text-sm font-black uppercase tracking-[0.14em] text-[#22c55e] sm:tracking-[0.24em]">
-                GOO Delivery pour entreprises
-              </p>
-              <h2 className="mt-5 break-words text-4xl font-black uppercase leading-[0.9] tracking-tight min-[380px]:text-5xl sm:text-6xl lg:text-7xl">
-                Livraisons flexibles
-                <span className="block text-[#22c55e]">à grande échelle</span>
-              </h2>
-              <p className="mt-7 max-w-xl text-lg font-semibold leading-8 text-zinc-200">
-                Une solution configurable pour nourrir vos équipes, servir vos clients et
-                fluidifier vos opérations à Douala avec un service professionnel.
-              </p>
-
-              <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-                <PrimaryButton href={businessWhatsappUrl}>Demander une solution</PrimaryButton>
-                <SecondaryButton href="#partenaires">Voir les partenaires</SecondaryButton>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="relative min-h-[420px] w-full min-w-0 max-w-full overflow-hidden bg-cover bg-center lg:min-h-full"
-            style={{
-              backgroundImage:
-                "linear-gradient(90deg, rgba(34,197,94,0.18), rgba(0,0,0,0.08)), url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1600&q=85')",
-            }}
+function ExploreScreen({
+  activeCategory,
+  restaurants,
+  query,
+  onCategory,
+  onOpenRestaurant,
+}: {
+  activeCategory: CategoryId;
+  restaurants: Array<Restaurant & { liveDistanceKm: number; liveDeliveryFee: number }>;
+  query: string;
+  onCategory: (category: CategoryId) => void;
+  onOpenRestaurant: (restaurant: Restaurant) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <SectionTitle title="Explorer" action={`${restaurants.length} résultats`} />
+      <CategoryRail activeCategory={activeCategory} onCategory={onCategory} />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {restaurants.map((restaurant) => (
+          <button
+            key={restaurant.id}
+            type="button"
+            onClick={() => onOpenRestaurant(restaurant)}
+            className="flex min-w-0 gap-4 rounded-[24px] bg-white p-3 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
           >
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0)_35%,rgba(0,0,0,0.55)_100%)]" />
-            <div className="absolute bottom-5 left-5 right-5 grid min-w-0 gap-3 sm:left-auto sm:right-8 sm:w-80">
-              {enterpriseHighlights.map((highlight) => (
-                <div key={highlight} className="flex min-w-0 items-center gap-3 rounded-lg bg-white/95 p-4 shadow-2xl shadow-black/20 backdrop-blur">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#22c55e] text-black">
-                    <CheckIcon className="h-5 w-5" />
-                  </span>
-                  <p className="min-w-0 break-words font-black text-zinc-900">{highlight}</p>
-                </div>
-              ))}
+            <div className="h-28 w-32 shrink-0 rounded-[20px] bg-cover bg-center" style={{ backgroundImage: `url(${restaurant.cover})` }} />
+            <div className="min-w-0 py-1">
+              <p className="truncate text-lg font-black">{restaurant.name}</p>
+              <p className="mt-1 text-sm font-semibold text-zinc-500">{restaurant.cuisine}</p>
+              <p className="mt-3 text-sm font-black text-[#008f35]">
+                ★ {restaurant.rating} · {restaurant.etaMin}-{restaurant.etaMax} min · {restaurant.liveDistanceKm.toFixed(1)} km
+              </p>
+              <p className="mt-1 text-xs font-bold text-zinc-400">
+                {query ? "Correspond à votre recherche" : restaurant.address}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RestaurantSheet({
+  darkMode,
+  favorite,
+  location,
+  menuCategory,
+  menuSearch,
+  restaurant,
+  onClose,
+  onMenuCategory,
+  onMenuSearch,
+  onOpenProduct,
+  onToggleFavorite,
+}: {
+  darkMode: boolean;
+  favorite: boolean;
+  location: ClientLocation;
+  menuCategory: string;
+  menuSearch: string;
+  restaurant: Restaurant;
+  onClose: () => void;
+  onMenuCategory: (category: string) => void;
+  onMenuSearch: (value: string) => void;
+  onOpenProduct: (restaurant: Restaurant, item: MenuItem) => void;
+  onToggleFavorite: () => void;
+}) {
+  const distanceKm = getRestaurantDistance(restaurant, location);
+  const deliveryFee = calculateDeliveryFee(restaurant, distanceKm, restaurant.minOrder);
+  const menuCategories = ["Tous", ...restaurant.menu.map((section) => section.title)];
+  const normalizedMenuSearch = menuSearch.trim().toLowerCase();
+  const visibleSections = restaurant.menu
+    .filter((section) => menuCategory === "Tous" || section.title === menuCategory)
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(
+        (item) =>
+          !normalizedMenuSearch ||
+          `${item.name} ${item.description}`.toLowerCase().includes(normalizedMenuSearch),
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
+
+  return (
+    <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm">
+      <div
+        className={cn(
+          "goo-sheet fixed inset-x-0 bottom-0 mx-auto max-h-[94vh] w-full max-w-6xl overflow-y-auto rounded-t-[32px] shadow-2xl",
+          darkMode ? "bg-[#070707] text-white" : "bg-white text-black",
+        )}
+      >
+        <div className="relative h-[34vh] min-h-[260px] overflow-hidden rounded-t-[32px] bg-zinc-200">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${restaurant.cover})` }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/76 via-black/20 to-black/20" />
+          <div className="absolute left-4 right-4 top-4 flex items-center justify-between gap-3">
+            <button type="button" onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full bg-white text-black shadow">
+              <Icon name="close" className="h-5 w-5" />
+            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onToggleFavorite}
+                className="grid h-11 w-11 place-items-center rounded-full bg-white text-black shadow"
+                aria-label="Favori"
+              >
+                <Icon name="heart" className="h-5 w-5" filled={favorite} />
+              </button>
+              <button type="button" className="grid h-11 w-11 place-items-center rounded-full bg-white text-black shadow" aria-label="Partager">
+                <Icon name="share" className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+          <div className="absolute bottom-5 left-5 right-5 text-white">
+            <div className="flex items-end gap-4">
+              <span className={cn("grid h-20 w-20 place-items-center rounded-[24px] text-2xl font-black ring-4 ring-white", restaurant.logoTone)}>
+                {restaurant.shortName}
+              </span>
+              <div className="min-w-0">
+                <h2 className="break-words text-4xl font-black tracking-tight sm:text-5xl">{restaurant.name}</h2>
+                <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-white/78">{restaurant.description}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-7xl overflow-hidden px-5 py-20 sm:px-8 lg:py-24">
-          <div className="grid min-w-0 gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
-            <div
-              className="relative min-h-[330px] overflow-hidden rounded-lg bg-cover bg-center shadow-2xl shadow-zinc-200"
-              style={{
-                backgroundImage:
-                  "linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.62)), url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=85')",
-              }}
-            >
-              <div className="absolute inset-0 grid place-items-center">
-                <span className="grid h-20 w-20 place-items-center rounded-full bg-[#22c55e] text-black shadow-2xl shadow-black/30">
-                  <span className="ml-1 h-0 w-0 border-y-[14px] border-l-[22px] border-y-transparent border-l-black" />
-                </span>
+        <div className="px-4 py-5 sm:px-6 lg:px-8">
+          <div className="grid gap-3 md:grid-cols-4">
+            <InfoTile icon="star" label="Note" value={`★ ${restaurant.rating} · ${restaurant.reviews} avis`} />
+            <InfoTile icon="clock" label="Livraison" value={`${restaurant.etaMin}-${restaurant.etaMax} min`} />
+            <InfoTile icon="route" label="Distance" value={`${distanceKm.toFixed(1)} km`} />
+            <InfoTile icon="cart" label="Frais" value={deliveryFee === 0 ? "Gratuite" : formatPrice(deliveryFee)} />
+          </div>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="rounded-[24px] bg-zinc-50 p-5">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#008f35]">Informations</p>
+              <div className="mt-4 grid gap-3 text-sm font-semibold text-zinc-600 sm:grid-cols-2">
+                <p>Adresse : <span className="font-black text-black">{restaurant.address}</span></p>
+                <p>Horaires : <span className="font-black text-black">{restaurant.hours}</span></p>
+                <p>Téléphone : <span className="font-black text-black">{restaurant.phone}</span></p>
+                <p>Minimum : <span className="font-black text-black">{formatPrice(restaurant.minOrder)}</span></p>
               </div>
-              <div className="absolute bottom-5 left-5 right-5 min-w-0 rounded-lg bg-white/95 p-4 backdrop-blur">
-                <p className="break-words text-sm font-black uppercase tracking-[0.12em] text-[#16a34a] sm:tracking-[0.18em]">
-                  Programme entreprise
-                </p>
-                <p className="mt-1 break-words text-base font-black text-black sm:text-xl">Bonamoussadi → Akwa → Bonapriso</p>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                <a
+                  href={supportPhoneHref}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#00B140] hover:text-black"
+                >
+                  <Icon name="support" className="h-4 w-4" />
+                  Appeler
+                </a>
+                <a
+                  href={getGoogleMapsUrl(restaurant)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 px-5 py-3 text-sm font-black transition hover:border-[#00B140]"
+                >
+                  <Icon name="route" className="h-4 w-4" />
+                  Itinéraire
+                </a>
               </div>
             </div>
 
-            <div className="min-w-0">
-              <p className="break-words text-sm font-black uppercase tracking-[0.14em] text-[#22c55e] sm:tracking-[0.22em]">
-                Pensé pour les opérations
-              </p>
-              <h3 className="mt-4 max-w-3xl break-words text-3xl font-black uppercase leading-none tracking-tight text-black sm:text-5xl">
-                Le meilleur de GOO Delivery, conçu pour les entreprises.
-              </h3>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600">
-                GOO Delivery devient votre extension logistique : repas d&apos;équipe,
-                courses professionnelles, documents, colis et tournées récurrentes.
-                Vous gardez un contact direct sur WhatsApp et une exécution simple à suivre.
-              </p>
+            <div className="overflow-hidden rounded-[24px] bg-black p-5 text-white">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#00B140]">Carte live</p>
+              <div className="mt-4 h-44 rounded-[22px] bg-[radial-gradient(circle_at_35%_35%,rgba(0,177,64,0.55),transparent_32%),linear-gradient(135deg,#1f2937,#050505)] p-4">
+                <div className="relative h-full">
+                  <span className="absolute left-[18%] top-[48%] grid h-10 w-10 place-items-center rounded-full bg-[#00B140] text-black">
+                    <Icon name="pin" className="h-5 w-5" />
+                  </span>
+                  <span className="absolute right-[22%] top-[24%] grid h-10 w-10 place-items-center rounded-full bg-white text-black">
+                    <Icon name="home" className="h-5 w-5" />
+                  </span>
+                  <div className="absolute left-[27%] top-[52%] h-1 w-[44%] rotate-[-24deg] rounded-full bg-[#00B140]" />
+                </div>
+              </div>
+            </div>
+          </div>
 
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {enterpriseHighlights.map((highlight) => (
-                  <div key={highlight} className="flex min-w-0 items-center gap-3 rounded-lg border border-zinc-200 bg-white p-4">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black text-[#22c55e]">
-                      <CheckIcon className="h-5 w-5" />
-                    </span>
-                    <p className="min-w-0 break-words font-black">{highlight}</p>
-                  </div>
+          <div className="sticky top-[120px] z-10 mt-6 rounded-[24px] bg-white/90 p-3 shadow-sm backdrop-blur-xl">
+            <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+              <label className="flex min-w-0 items-center gap-3 rounded-full bg-zinc-100 px-4 py-3">
+                <Icon name="search" className="h-5 w-5 text-[#00B140]" />
+                <input
+                  value={menuSearch}
+                  onChange={(event) => onMenuSearch(event.target.value)}
+                  placeholder="Rechercher dans le menu"
+                  className="min-w-0 flex-1 bg-transparent text-sm font-bold outline-none"
+                />
+              </label>
+              <div className="goo-scrollbar flex gap-2 overflow-x-auto">
+                {menuCategories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => onMenuCategory(category)}
+                    className={cn(
+                      "shrink-0 rounded-full px-4 py-3 text-sm font-black transition",
+                      menuCategory === category ? "bg-black text-white" : "bg-zinc-100 text-black",
+                    )}
+                  >
+                    {category}
+                  </button>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {enterpriseSolutions.map((solution) => {
-              const Icon = solution.Icon;
-
-              return (
-                <article key={solution.title} className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-[#22c55e] hover:shadow-xl">
-                  <div className="grid h-12 w-12 place-items-center rounded-lg bg-black text-[#22c55e]">
-                    <Icon />
-                  </div>
-                  <h3 className="mt-6 break-words text-xl font-black">{solution.title}</h3>
-                  <p className="mt-3 leading-7 text-zinc-600">{solution.description}</p>
-                </article>
-              );
-            })}
+          <div className="mt-6 space-y-8">
+            {visibleSections.map((section) => (
+              <section key={section.title} className="space-y-3">
+                <h3 className="text-2xl font-black">{section.title}</h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {section.items.map((item) => (
+                    <ProductCard key={item.id} item={item} restaurant={restaurant} onOpen={() => onOpenProduct(restaurant, item)} />
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  );
+}
 
-      <section className="px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto w-full max-w-7xl min-w-0">
-          <SectionHeader
-            eyebrow="Moyens de livraison"
-            title="Le bon véhicule pour la bonne mission."
-            description="Motos, voitures et vans permettent à GOO Delivery de répondre aux livraisons rapides comme aux besoins volumineux."
-          />
+function ProductCard({
+  item,
+  onOpen,
+}: {
+  item: MenuItem;
+  restaurant: Restaurant;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group flex min-w-0 gap-4 rounded-[24px] bg-white p-3 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(0,0,0,0.1)]"
+    >
+      <div className="h-28 w-32 shrink-0 overflow-hidden rounded-[20px] bg-zinc-100">
+        <div className="h-full w-full bg-cover bg-center transition group-hover:scale-105" style={{ backgroundImage: `url(${item.image})` }} />
+      </div>
+      <div className="min-w-0 py-1">
+        <h4 className="truncate text-lg font-black">{item.name}</h4>
+        <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-zinc-500">{item.description}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-black text-zinc-500">
+          <span>{item.calories} kcal</span>
+          <span>·</span>
+          <span>{item.prepTime}</span>
+          <span>·</span>
+          <span>{item.popularity}% populaire</span>
+        </div>
+        <p className="mt-2 text-base font-black text-[#008f35]">{formatPrice(item.price)}</p>
+      </div>
+    </button>
+  );
+}
 
-          <div className="mt-14 grid gap-5 lg:grid-cols-3">
-            {deliveryModes.map((mode) => {
-              const Icon = mode.Icon;
+function ProductSheet({
+  draft,
+  product,
+  onAdd,
+  onClose,
+  onDraft,
+}: {
+  draft: {
+    quantity: number;
+    size: string;
+    sauce: string;
+    drink: string;
+    extras: string[];
+    note: string;
+  };
+  product: { restaurant: Restaurant; item: MenuItem };
+  onAdd: () => void;
+  onClose: () => void;
+  onDraft: React.Dispatch<
+    React.SetStateAction<{
+      quantity: number;
+      size: string;
+      sauce: string;
+      drink: string;
+      extras: string[];
+      note: string;
+    }>
+  >;
+}) {
+  const extrasTotal = product.item.extras
+    .filter((extra) => draft.extras.includes(extra.name))
+    .reduce((sum, extra) => sum + extra.price, 0);
+  const unitTotal = product.item.price + extrasTotal;
 
-              return (
-                <article key={mode.title} className="min-w-0 overflow-hidden rounded-lg bg-zinc-950 p-6 text-white shadow-xl shadow-zinc-200 transition hover:-translate-y-1 sm:p-7">
-                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-4">
-                    <div className="grid h-14 w-14 place-items-center rounded-lg bg-[#22c55e] text-black">
-                      <Icon />
-                    </div>
-                    <span className="min-w-0 max-w-full break-words rounded-full border border-white/10 px-3 py-1 text-right text-xs font-black uppercase leading-5 tracking-[0.12em] text-[#22c55e] sm:tracking-[0.16em]">
-                      {mode.subtitle}
-                    </span>
-                  </div>
-                  <h3 className="mt-8 break-words text-3xl font-black">{mode.title}</h3>
-                  <p className="mt-4 leading-7 text-zinc-300">{mode.description}</p>
-                </article>
-              );
-            })}
+  function toggleExtra(extra: string) {
+    haptic();
+    onDraft((current) => ({
+      ...current,
+      extras: current.extras.includes(extra)
+        ? current.extras.filter((item) => item !== extra)
+        : [...current.extras, extra],
+    }));
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-end bg-black/45 backdrop-blur-sm sm:place-items-center sm:p-4">
+      <div className="goo-sheet max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[32px] bg-white p-5 text-black shadow-2xl sm:rounded-[32px] sm:p-6">
+        <div className="relative h-64 overflow-hidden rounded-[26px] bg-zinc-100">
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${product.item.image})` }} />
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white text-black shadow"
+          >
+            <Icon name="close" className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="mt-5">
+          <p className="text-sm font-black uppercase tracking-[0.14em] text-[#008f35]">{product.restaurant.name}</p>
+          <h3 className="mt-2 text-3xl font-black">{product.item.name}</h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-zinc-500">{product.item.description}</p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs font-black text-zinc-500">
+            <span className="rounded-full bg-zinc-100 px-3 py-2">{product.item.calories} kcal</span>
+            <span className="rounded-full bg-zinc-100 px-3 py-2">{product.item.prepTime}</span>
+            <span className="rounded-full bg-zinc-100 px-3 py-2">{product.item.popularity}% populaire</span>
           </div>
         </div>
-      </section>
 
-      <CampaignPanel />
-
-      <section id="partenaires" className="px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div className="min-w-0">
-            <p className="text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
-              Partenaires
-            </p>
-            <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
-              Donnez plus de vitesse à votre activité.
-            </h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-600">
-              Restaurants, boutiques, pharmacies, supermarchés et entreprises peuvent
-              s&apos;appuyer sur GOO Delivery pour livrer plus vite et mieux servir leurs clients.
-            </p>
-            <div className="mt-9">
-              <PrimaryButton href={whatsappUrl}>Devenir partenaire</PrimaryButton>
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {partners.map((partner) => (
-              <div key={partner} className="flex min-w-0 items-center gap-4 overflow-hidden rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-[#22c55e] hover:shadow-lg">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#22c55e] text-black">
-                  <CheckIcon />
-                </span>
-                <p className="min-w-0 break-words text-xl font-black">{partner}</p>
+        <div className="mt-5 grid gap-4">
+          {product.item.options.map((option) => {
+            const key = option.label === "Taille" ? "size" : option.label === "Sauce" ? "sauce" : "drink";
+            const value = draft[key];
+            return (
+              <div key={option.label}>
+                <p className="text-sm font-black">{option.label}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {option.values.map((optionValue) => (
+                    <button
+                      key={optionValue}
+                      type="button"
+                      onClick={() => onDraft((current) => ({ ...current, [key]: optionValue }))}
+                      className={cn(
+                        "rounded-full px-4 py-2 text-sm font-black transition",
+                        value === optionValue ? "bg-[#00B140] text-black" : "bg-zinc-100 text-black",
+                      )}
+                    >
+                      {optionValue}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ))}
+            );
+          })}
+
+          <div>
+            <p className="text-sm font-black">Suppléments</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              {product.item.extras.map((extra) => (
+                <button
+                  key={extra.name}
+                  type="button"
+                  onClick={() => toggleExtra(extra.name)}
+                  className={cn(
+                    "rounded-[18px] px-4 py-3 text-left text-sm font-black transition",
+                    draft.extras.includes(extra.name) ? "bg-[#00B140] text-black" : "bg-zinc-100 text-black",
+                  )}
+                >
+                  {extra.name}
+                  <span className="block text-xs font-bold opacity-60">+{formatPrice(extra.price)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className="grid gap-2 text-sm font-black">
+            Instructions spéciales
+            <textarea
+              value={draft.note}
+              onChange={(event) => onDraft((current) => ({ ...current, note: event.target.value }))}
+              rows={3}
+              placeholder="Exemple : peu de piment, sans oignon..."
+              className="rounded-[20px] border border-zinc-200 px-4 py-3 font-semibold outline-none transition focus:border-[#00B140]"
+            />
+          </label>
+        </div>
+
+        <div className="sticky bottom-0 mt-6 flex items-center gap-3 bg-white pt-4">
+          <div className="flex items-center rounded-full bg-zinc-100 p-1">
+            <button
+              type="button"
+              onClick={() => onDraft((current) => ({ ...current, quantity: Math.max(1, current.quantity - 1) }))}
+              className="grid h-11 w-11 place-items-center rounded-full bg-white"
+            >
+              <Icon name="minus" className="h-5 w-5" />
+            </button>
+            <span className="w-10 text-center text-sm font-black">{draft.quantity}</span>
+            <button
+              type="button"
+              onClick={() => onDraft((current) => ({ ...current, quantity: current.quantity + 1 }))}
+              className="grid h-11 w-11 place-items-center rounded-full bg-[#00B140]"
+            >
+              <Icon name="plus" className="h-5 w-5" />
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onAdd}
+            className="flex flex-1 items-center justify-center rounded-full bg-black px-5 py-4 text-sm font-black text-white transition hover:bg-[#00B140] hover:text-black"
+          >
+            Ajouter au panier · {formatPrice(unitTotal * draft.quantity)}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CartDrawer({
+  cartLines,
+  cartRestaurant,
+  coupon,
+  deliveryFee,
+  deliveryTime,
+  discount,
+  driverNote,
+  location,
+  paymentMethod,
+  serviceFee,
+  subtotal,
+  taxes,
+  tip,
+  total,
+  onClose,
+  onCoupon,
+  onDeliveryTime,
+  onDriverNote,
+  onPaymentMethod,
+  onSubmit,
+  onTip,
+  onUpdateQuantity,
+}: {
+  cartLines: CartLine[];
+  cartRestaurant: Restaurant | null;
+  coupon: string;
+  deliveryFee: number;
+  deliveryTime: string;
+  discount: number;
+  driverNote: string;
+  location: ClientLocation;
+  paymentMethod: string;
+  serviceFee: number;
+  subtotal: number;
+  taxes: number;
+  tip: number;
+  total: number;
+  onClose: () => void;
+  onCoupon: (value: string) => void;
+  onDeliveryTime: (value: string) => void;
+  onDriverNote: (value: string) => void;
+  onPaymentMethod: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onTip: (value: number) => void;
+  onUpdateQuantity: (index: number, quantity: number) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[95] bg-black/45 backdrop-blur-sm">
+      <form
+        onSubmit={onSubmit}
+        className="goo-sheet fixed bottom-0 right-0 top-0 flex w-full max-w-xl flex-col bg-white p-5 text-black shadow-2xl sm:p-6"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.14em] text-[#008f35]">Panier</p>
+            <h2 className="mt-2 text-3xl font-black">{cartRestaurant?.name ?? "Votre commande"}</h2>
+            <p className="mt-1 text-sm font-semibold text-zinc-500">{location.label}</p>
+          </div>
+          <button type="button" onClick={onClose} className="grid h-11 w-11 place-items-center rounded-full bg-zinc-100">
+            <Icon name="close" className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="goo-scrollbar mt-5 flex-1 space-y-3 overflow-y-auto pr-1">
+          {cartLines.length === 0 ? (
+            <div className="rounded-[24px] bg-zinc-50 p-8 text-center">
+              <Icon name="cart" className="mx-auto h-10 w-10 text-[#00B140]" />
+              <p className="mt-3 text-lg font-black">Votre panier est vide</p>
+              <p className="mt-1 text-sm font-semibold text-zinc-500">Ajoutez un produit pour commencer.</p>
+            </div>
+          ) : null}
+
+          {cartLines.map((line, index) => (
+            <div key={`${line.item.id}-${index}`} className="rounded-[24px] bg-zinc-50 p-4">
+              <div className="flex gap-3">
+                <div className="h-20 w-20 shrink-0 rounded-[18px] bg-cover bg-center" style={{ backgroundImage: `url(${line.item.image})` }} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-base font-black">{line.item.name}</p>
+                  <p className="mt-1 text-xs font-bold text-zinc-500">
+                    {line.size} · {line.sauce} · {line.drink}
+                  </p>
+                  {line.extras.length ? (
+                    <p className="mt-1 text-xs font-bold text-zinc-500">{line.extras.join(", ")}</p>
+                  ) : null}
+                  {line.note ? <p className="mt-1 text-xs font-bold text-zinc-400">{line.note}</p> : null}
+                  <p className="mt-2 text-sm font-black text-[#008f35]">{formatPrice(line.item.price * line.quantity)}</p>
+                </div>
+                <div className="flex items-center gap-1 self-start rounded-full bg-white p-1">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateQuantity(index, line.quantity - 1)}
+                    className="grid h-8 w-8 place-items-center rounded-full bg-zinc-100"
+                  >
+                    <Icon name="minus" className="h-4 w-4" />
+                  </button>
+                  <span className="w-6 text-center text-sm font-black">{line.quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateQuantity(index, line.quantity + 1)}
+                    className="grid h-8 w-8 place-items-center rounded-full bg-[#00B140]"
+                  >
+                    <Icon name="plus" className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <div className="grid gap-3 rounded-[24px] bg-zinc-50 p-4">
+            <label className="grid gap-2 text-sm font-black">
+              Code promo
+              <input
+                value={coupon}
+                onChange={(event) => onCoupon(event.target.value)}
+                placeholder="GOO20"
+                className="rounded-[18px] border border-zinc-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-[#00B140]"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-black">
+              Instructions pour le livreur
+              <textarea
+                value={driverNote}
+                onChange={(event) => onDriverNote(event.target.value)}
+                placeholder="Appartement, repère, appel à l’arrivée..."
+                rows={3}
+                className="rounded-[18px] border border-zinc-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-[#00B140]"
+              />
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-black">
+                Paiement
+                <select
+                  value={paymentMethod}
+                  onChange={(event) => onPaymentMethod(event.target.value)}
+                  className="rounded-[18px] border border-zinc-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-[#00B140]"
+                >
+                  {["Mobile Money", "Cash", "Carte Visa", "Mastercard", "PayPal", "Apple Pay", "Google Pay", "Portefeuille GOO"].map((method) => (
+                    <option key={method}>{method}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-black">
+                Heure souhaitée
+                <select
+                  value={deliveryTime}
+                  onChange={(event) => onDeliveryTime(event.target.value)}
+                  className="rounded-[18px] border border-zinc-200 bg-white px-4 py-3 font-semibold outline-none transition focus:border-[#00B140]"
+                >
+                  {["Dès que possible", "Dans 30 minutes", "Dans 1 heure", "Ce soir"].map((time) => (
+                    <option key={time}>{time}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div>
+              <p className="text-sm font-black">Pourboire</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[0, 500, 1000, 1500].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => onTip(value)}
+                    className={cn(
+                      "rounded-full px-4 py-2 text-sm font-black",
+                      tip === value ? "bg-[#00B140] text-black" : "bg-white text-black",
+                    )}
+                  >
+                    {value === 0 ? "Aucun" : formatPrice(value)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </section>
 
-      <section className="bg-zinc-50 px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto w-full max-w-7xl min-w-0">
-          <SectionHeader
-            eyebrow="Avantages"
-            title="Une expérience pensée pour la confiance."
-            description="GOO Delivery combine rapidité, suivi, communication et standards professionnels."
-          />
+        <div className="mt-4 rounded-[24px] bg-black p-4 text-white">
+          <PriceLine label="Sous-total" value={formatPrice(subtotal)} />
+          <PriceLine label="Taxes" value={formatPrice(taxes)} />
+          <PriceLine label="Service" value={formatPrice(serviceFee)} />
+          <PriceLine label="Livraison" value={deliveryFee === 0 ? "Gratuite" : formatPrice(deliveryFee)} />
+          <PriceLine label="Pourboire" value={formatPrice(tip)} />
+          <PriceLine label="Réduction" value={`-${formatPrice(discount)}`} />
+          <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
+            <span className="text-lg font-black">Total</span>
+            <span className="text-2xl font-black text-[#00B140]">{formatPrice(total)}</span>
+          </div>
+        </div>
 
-          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {advantages.map((advantage) => {
-              const Icon = advantage.Icon;
+        <button
+          type="submit"
+          disabled={cartLines.length === 0}
+          className="mt-4 rounded-full bg-[#00B140] px-6 py-4 text-sm font-black text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500"
+        >
+          Commander
+        </button>
+      </form>
+    </div>
+  );
+}
 
-              return (
-                <article key={advantage.title} className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-                  <div className="grid h-12 w-12 place-items-center rounded-lg bg-black text-[#22c55e]">
-                    <Icon />
+function OrdersScreen({ darkMode }: { darkMode: boolean }) {
+  const steps = ["Commande reçue", "Restaurant prépare", "Livreur récupère", "En route", "Livré"];
+
+  return (
+    <div className="space-y-6">
+      <SectionTitle title="Commandes" action="Suivi temps réel" />
+      <section className={cn("rounded-[28px] p-5 shadow-sm", darkMode ? "bg-white/8" : "bg-white")}>
+        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.14em] text-[#008f35]">En cours</p>
+            <h2 className="mt-2 text-3xl font-black">Urban Shawarma arrive bientôt</h2>
+            <p className="mt-2 text-sm font-semibold text-zinc-500">Temps restant estimé : 12 minutes.</p>
+            <div className="mt-6 space-y-4">
+              {steps.map((step, index) => (
+                <div key={step} className="flex items-center gap-3">
+                  <span className={cn("grid h-10 w-10 place-items-center rounded-full", index <= 3 ? "bg-[#00B140] text-black" : "bg-zinc-100 text-zinc-400")}>
+                    <Icon name={index <= 3 ? "check" : "clock"} className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-black">{step}</p>
+                    <p className="text-xs font-bold text-zinc-500">{index <= 3 ? "Terminé" : "En attente"}</p>
                   </div>
-                  <h3 className="mt-6 break-words text-2xl font-black">{advantage.title}</h3>
-                  <p className="mt-3 leading-7 text-zinc-600">{advantage.description}</p>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-lg bg-[linear-gradient(135deg,#22c55e_0%,#22c55e_48%,#050505_48%,#050505_100%)] p-8 text-black sm:p-12 lg:p-14">
-          <div className="grid min-w-0 gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
-            <div className="min-w-0">
-              <LogoImage size="lg" />
-              <h2 className="mt-8 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
-                Prêt à commander ?
-              </h2>
-              <p className="mt-5 max-w-xl text-lg font-semibold leading-8 text-black/75">
-                Lancez votre course maintenant et recevez une réponse rapide sur WhatsApp.
-              </p>
+                </div>
+              ))}
             </div>
-            <div className="lg:text-right">
-              <PrimaryButton href={whatsappUrl} dark>
-                Commander sur WhatsApp
-              </PrimaryButton>
+          </div>
+          <div className="min-h-[360px] rounded-[26px] bg-[radial-gradient(circle_at_30%_32%,rgba(0,177,64,0.45),transparent_30%),linear-gradient(135deg,#111827,#050505)] p-5 text-white">
+            <div className="relative h-full min-h-[320px]">
+              <span className="absolute left-[18%] top-[60%] rounded-full bg-white px-4 py-2 text-xs font-black text-black">Client</span>
+              <span className="absolute right-[18%] top-[18%] rounded-full bg-[#00B140] px-4 py-2 text-xs font-black text-black">Livreur</span>
+              <div className="absolute left-[30%] top-[55%] h-1 w-[45%] rotate-[-34deg] rounded-full bg-[#00B140]" />
+              <div className="absolute bottom-4 left-4 right-4 rounded-[22px] bg-white p-4 text-black">
+                <p className="font-black">Suivi live</p>
+                <p className="mt-1 text-sm font-semibold text-zinc-500">Carte Google Maps prête à connecter côté backend.</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="contact" className="bg-black px-5 py-20 text-white sm:px-8 lg:py-24">
-        <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div className="min-w-0">
-            <p className="text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
-              Contact
-            </p>
-            <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
-              Une demande, une réponse, une livraison.
-            </h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-300">
-              Contactez GOO Delivery pour une course immédiate, un besoin régulier ou
-              une collaboration professionnelle.
-            </p>
-          </div>
+      <section className="rounded-[28px] bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-2xl font-black">Historique</h3>
+          <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-black">12 commandes</span>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {["Maison H", "Tchop & Yamo", "Asian Bowl"].map((name, index) => (
+            <div key={name} className="rounded-[22px] bg-zinc-50 p-4">
+              <p className="font-black">{name}</p>
+              <p className="mt-1 text-sm font-semibold text-zinc-500">Livré · {index + 1} jour(s)</p>
+              <button type="button" className="mt-4 rounded-full bg-black px-4 py-2 text-xs font-black text-white">
+                Recommander
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
 
-          <div className="grid min-w-0 gap-4">
-            <a className="min-w-0 rounded-lg border border-white/10 bg-white/[0.04] p-5 transition hover:border-[#22c55e] sm:p-6" href="tel:+237695502710">
-              <p className="text-sm font-black uppercase tracking-[0.12em] sm:tracking-[0.18em] text-[#22c55e]">WhatsApp</p>
-              <p className="mt-3 break-words text-xl font-black sm:text-2xl">{whatsappNumber}</p>
-            </a>
-            <a className="min-w-0 rounded-lg border border-white/10 bg-white/[0.04] p-5 transition hover:border-[#22c55e] sm:p-6" href={`mailto:${email}`}>
-              <p className="text-sm font-black uppercase tracking-[0.12em] sm:tracking-[0.18em] text-[#22c55e]">Email</p>
-              <p className="mt-3 break-all text-xl font-black sm:text-2xl">{email}</p>
-            </a>
-            <PrimaryButton href={whatsappUrl}>Lien direct WhatsApp</PrimaryButton>
+function FavoritesScreen({
+  favorites,
+  restaurants,
+  onOpenRestaurant,
+  onToggleFavorite,
+}: {
+  favorites: string[];
+  restaurants: Array<Restaurant & { liveDistanceKm: number; liveDeliveryFee: number }>;
+  onOpenRestaurant: (restaurant: Restaurant) => void;
+  onToggleFavorite: (id: string) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <SectionTitle title="Favoris" action={`${favorites.length} enregistrés`} />
+      <SectionRail
+        favorites={favorites}
+        restaurants={restaurants}
+        title="Restaurants favoris"
+        onOpenRestaurant={onOpenRestaurant}
+        onToggleFavorite={onToggleFavorite}
+      />
+      <section className="rounded-[28px] bg-white p-5 shadow-sm">
+        <h3 className="text-2xl font-black">Commandes fréquentes</h3>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {["Burger américain", "Avocado toast", "Riz cantonais poulet"].map((item) => (
+            <div key={item} className="rounded-[22px] bg-zinc-50 p-4">
+              <p className="font-black">{item}</p>
+              <p className="mt-1 text-sm font-semibold text-zinc-500">Ajout rapide bientôt disponible</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ProfileScreen({
+  darkMode,
+  location,
+  onDarkMode,
+  onDetectLocation,
+}: {
+  darkMode: boolean;
+  location: ClientLocation;
+  onDarkMode: () => void;
+  onDetectLocation: () => void;
+}) {
+  const rows: Array<[IconName, string, string]> = [
+    ["pin", "Adresses", location.label],
+    ["wallet", "Paiements", "Mobile Money, Cash, Cartes, PayPal"],
+    ["orders", "Commandes", "Historique et reçus"],
+    ["heart", "Favoris", "Restaurants et produits"],
+    ["coupon", "Coupons", "GOO20 disponible"],
+    ["support", "Support", whatsappNumber],
+    ["settings", "Paramètres", darkMode ? "Mode sombre actif" : "Mode clair actif"],
+    ["logout", "Déconnexion", "Sécuriser la session"],
+  ];
+
+  return (
+    <div className="space-y-6">
+      <SectionTitle title="Profil" action="Compte client" />
+      <section className="rounded-[28px] bg-black p-5 text-white shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="grid h-20 w-20 place-items-center rounded-[24px] bg-[#00B140] text-3xl font-black text-black">
+            G
           </div>
+          <div>
+            <h2 className="text-3xl font-black">Client GOO</h2>
+            <p className="mt-1 text-sm font-semibold text-white/60">client@goo-delivery.cm · +237 6XX XXX XXX</p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {[
+            ["Points", "1 240"],
+            ["Coupons", "4"],
+            ["Commandes", "12"],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-[22px] bg-white/10 p-4">
+              <p className="text-2xl font-black">{value}</p>
+              <p className="mt-1 text-xs font-bold text-white/60">{label}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      <footer className="border-t border-zinc-200 px-5 py-8 sm:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 text-sm text-zinc-500 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <LogoImage size="sm" />
-            <div className="min-w-0">
-              <p className="font-black text-black">GOO Delivery</p>
-              <p>© 2026 GOO Delivery. Tous droits réservés.</p>
+      <section className="grid gap-3 md:grid-cols-2">
+        {rows.map(([icon, title, value]) => (
+          <button
+            key={title}
+            type="button"
+            onClick={title === "Adresses" ? onDetectLocation : title === "Paramètres" ? onDarkMode : undefined}
+            className="flex items-center gap-4 rounded-[24px] bg-white p-4 text-left shadow-sm transition hover:-translate-y-1"
+          >
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#00B140]/12 text-[#008f35]">
+              <Icon name={icon} className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-black text-black">{title}</span>
+              <span className="block truncate text-sm font-semibold text-zinc-500">{value}</span>
+            </span>
+          </button>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function SectionTitle({ action, title }: { action?: string; title: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <h2 className="text-2xl font-black tracking-tight text-current sm:text-3xl">{title}</h2>
+      {action ? (
+        <button type="button" className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-black text-black shadow-sm transition hover:text-[#008f35]">
+          {action}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function InfoTile({ icon, label, value }: { icon: IconName; label: string; value: string }) {
+  return (
+    <div className="rounded-[24px] bg-zinc-50 p-4">
+      <Icon name={icon} className="h-5 w-5 text-[#00B140]" />
+      <p className="mt-3 text-xs font-black uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+      <p className="mt-1 text-sm font-black text-black">{value}</p>
+    </div>
+  );
+}
+
+function PriceLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-1 text-sm font-semibold text-white/70">
+      <span>{label}</span>
+      <span className="font-black text-white">{value}</span>
+    </div>
+  );
+}
+
+function SkeletonRail() {
+  return (
+    <section className="space-y-4">
+      <SectionTitle title="Chargement premium" action="Shimmer" />
+      <div className="flex gap-4 overflow-hidden">
+        {[1, 2, 3].map((item) => (
+          <div key={item} className="w-[82vw] max-w-[360px] shrink-0 rounded-[26px] bg-white p-3 shadow-sm sm:w-[330px]">
+            <div className="goo-shimmer h-52 rounded-[22px] bg-zinc-100" />
+            <div className="mt-4 space-y-3">
+              <div className="goo-shimmer h-5 w-2/3 rounded bg-zinc-100" />
+              <div className="goo-shimmer h-4 w-full rounded bg-zinc-100" />
+              <div className="goo-shimmer h-4 w-1/2 rounded bg-zinc-100" />
             </div>
           </div>
-          <div className="flex flex-wrap gap-5">
-            {navLinks.map((link) => (
-              <a key={link.href} className="transition hover:text-[#22c55e]" href={link.href}>
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      </footer>
-    </main>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BottomNavigation({
+  activeTab,
+  cartCount,
+  onTab,
+}: {
+  activeTab: AppTab;
+  cartCount: number;
+  onTab: (tab: AppTab) => void;
+}) {
+  const tabs: Array<[AppTab, IconName, string]> = [
+    ["home", "home", "Accueil"],
+    ["explore", "explore", "Explorer"],
+    ["orders", "orders", "Commandes"],
+    ["favorites", "heart", "Favoris"],
+    ["profile", "profile", "Profil"],
+  ];
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-3xl px-3 pb-3">
+      <div className="grid grid-cols-5 rounded-[28px] border border-black/5 bg-white/94 p-2 shadow-[0_20px_70px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+        {tabs.map(([tab, icon, label]) => {
+          const active = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => {
+                haptic();
+                onTab(tab);
+              }}
+              className={cn(
+                "relative flex flex-col items-center gap-1 rounded-[22px] px-2 py-2 text-[11px] font-black transition",
+                active ? "bg-[#00B140] text-black" : "text-zinc-500 hover:text-black",
+              )}
+            >
+              <Icon name={icon} className="h-5 w-5" filled={active && icon === "heart"} />
+              <span className="hidden sm:inline">{label}</span>
+              {tab === "orders" && cartCount > 0 ? (
+                <span className="absolute right-2 top-1 h-2 w-2 rounded-full bg-black" />
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function Icon({ className = "h-5 w-5", filled = false, name }: { className?: string; filled?: boolean; name: IconName }) {
+  const fill = filled ? "currentColor" : "none";
+  const strokeWidth = 2.3;
+
+  if (name === "search") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "home") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-8.5Z" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (name === "explore") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+        <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (name === "orders" || name === "cart") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M5 6h2l2 10h8l2-7H8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M10 20h.01M17 20h.01" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "heart") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M20.8 5.8a5.3 5.3 0 0 0-7.5 0L12 7.1l-1.3-1.3a5.3 5.3 0 0 0-7.5 7.5L12 22l8.8-8.7a5.3 5.3 0 0 0 0-7.5Z" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (name === "profile") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+        <path d="M4 21a8 8 0 0 1 16 0" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "bell") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" strokeLinejoin="round" />
+        <path d="M10 21h4" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "pin") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M12 21s7-5.4 7-12A7 7 0 1 0 5 9c0 6.6 7 12 7 12Z" strokeLinejoin="round" />
+        <circle cx="12" cy="9" r="2.5" />
+      </svg>
+    );
+  }
+
+  if (name === "chevron") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (name === "share") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" strokeLinecap="round" />
+        <path d="M12 15V3m0 0 4 4m-4-4L8 7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (name === "star") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="m12 2 2.9 6 6.6 1-4.8 4.6 1.1 6.5L12 17l-5.8 3.1 1.1-6.5L2.5 9l6.6-1L12 2Z" />
+      </svg>
+    );
+  }
+
+  if (name === "clock") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "route") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d="M6 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+        <path d="M8.4 14.4 15.6 9.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "plus" || name === "minus" || name === "close" || name === "check") {
+    const path =
+      name === "plus"
+        ? "M12 5v14M5 12h14"
+        : name === "minus"
+          ? "M5 12h14"
+          : name === "close"
+            ? "m6 6 12 12M18 6 6 18"
+            : "m5 12 4 4L19 6";
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth}>
+        <path d={path} strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  const textMap: Partial<Record<IconName, string>> = {
+    wallet: "₿",
+    settings: "⚙",
+    support: "☎",
+    coupon: "%",
+    logout: "↗",
+    moon: "◐",
+    spark: "✦",
+  };
+
+  return <span className={cn("grid place-items-center text-current", className)}>{textMap[name] ?? "•"}</span>;
+}
+
+function AppStyles() {
+  return (
+    <style>{`
+      .material-symbols-rounded {
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .goo-scrollbar {
+        scrollbar-width: none;
+      }
+
+      .goo-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .goo-promo-track {
+        animation: goo-slide 28s linear infinite;
+      }
+
+      .goo-progress {
+        width: 72%;
+        animation: goo-progress 2.4s ease-in-out infinite alternate;
+      }
+
+      .goo-sheet {
+        animation: goo-sheet 220ms cubic-bezier(.2,.8,.2,1);
+      }
+
+      .goo-shimmer {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .goo-shimmer::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+        animation: goo-shimmer 1.35s infinite;
+      }
+
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      @keyframes goo-slide {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+
+      @keyframes goo-progress {
+        from { width: 45%; }
+        to { width: 84%; }
+      }
+
+      @keyframes goo-sheet {
+        from {
+          opacity: 0;
+          transform: translateY(24px) scale(.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes goo-shimmer {
+        100% { transform: translateX(100%); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .goo-promo-track,
+        .goo-progress,
+        .goo-sheet,
+        .goo-shimmer::after {
+          animation: none;
+        }
+      }
+    `}</style>
   );
 }
