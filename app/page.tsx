@@ -7,6 +7,8 @@ const logoSrc = "/logo.png";
 const whatsappNumber = "+237 695 502 710";
 const whatsappUrl =
   "https://wa.me/237695502710?text=Bonjour%20GOO%20Delivery%2C%20je%20souhaite%20faire%20une%20commande.";
+const businessWhatsappUrl =
+  "https://wa.me/237695502710?text=Bonjour%20GOO%20Delivery%2C%20je%20souhaite%20mettre%20en%20place%20une%20solution%20de%20livraison%20pour%20mon%20entreprise.";
 const email = "goodeleveries237@gmail.com";
 
 type IconProps = {
@@ -58,6 +60,7 @@ const navLinks = [
   { label: "Accueil", href: "#accueil" },
   { label: "Services", href: "#services" },
   { label: "Comment ça marche", href: "#fonctionnement" },
+  { label: "Entreprises", href: "#entreprises" },
   { label: "Partenaires", href: "#partenaires" },
   { label: "Contact", href: "#contact" },
 ];
@@ -135,6 +138,36 @@ const deliveryModes = [
     subtitle: "Volumes et entreprises",
     description: "Pour les livraisons volumineuses, tournées et besoins professionnels.",
   },
+];
+
+const enterpriseSolutions = [
+  {
+    Icon: BuildingIcon,
+    title: "Repas d'équipe",
+    description: "Organisez les repas du bureau, les réunions et les journées chargées avec une livraison coordonnée.",
+  },
+  {
+    Icon: CartIcon,
+    title: "Commandes groupées",
+    description: "Centralisez plusieurs besoins dans une même course pour réduire les retards et les échanges.",
+  },
+  {
+    Icon: DocumentIcon,
+    title: "Documents & courses pro",
+    description: "Faites circuler contrats, dossiers, achats et petits colis entre vos sites ou vos clients.",
+  },
+  {
+    Icon: VanIcon,
+    title: "Tournées récurrentes",
+    description: "Planifiez des livraisons régulières pour magasins, pharmacies, supermarchés et entreprises.",
+  },
+];
+
+const enterpriseHighlights = [
+  "Support WhatsApp prioritaire",
+  "Suivi clair des courses",
+  "Motos, voitures et vans",
+  "Solution adaptée aux équipes",
 ];
 
 const partners = [
@@ -485,17 +518,17 @@ function LogoImage({
   surface?: "light" | "dark";
 }) {
   const sizes = {
-    sm: "h-10 w-28",
-    md: "h-12 w-36 sm:w-44",
-    lg: "h-24 w-72 sm:h-28 sm:w-80",
-    xl: "h-28 w-80 sm:h-36 sm:w-[28rem] lg:h-40 lg:w-[32rem]",
+    sm: "h-10 w-24 max-w-[38vw] sm:w-28",
+    md: "h-12 w-32 max-w-[48vw] sm:w-44",
+    lg: "h-20 w-full max-w-full sm:h-28 sm:max-w-80",
+    xl: "h-24 w-full max-w-full sm:h-36 sm:max-w-[28rem] lg:h-40 lg:max-w-[32rem]",
   };
 
   const scales = {
-    sm: "scale-[1.85]",
-    md: "scale-[1.75]",
-    lg: "scale-[1.5]",
-    xl: "scale-[1.42]",
+    sm: "scale-100 sm:scale-[1.85]",
+    md: "scale-100 sm:scale-[1.75]",
+    lg: "scale-100 sm:scale-[1.5]",
+    xl: "scale-100 sm:scale-[1.42]",
   };
 
   return (
@@ -511,7 +544,7 @@ function LogoImage({
         alt="Logo officiel GOO Delivery"
         fill
         priority={priority}
-        sizes="(min-width: 1024px) 512px, 320px"
+        sizes="(min-width: 1024px) 512px, (min-width: 640px) 448px, 90vw"
         className={`object-contain mix-blend-multiply ${scales[size]}`}
       />
     </div>
@@ -530,12 +563,12 @@ function SectionHeader({
   inverted?: boolean;
 }) {
   return (
-    <div className="mx-auto max-w-3xl text-center">
-      <p className="text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
+    <div className="mx-auto max-w-3xl min-w-0 text-center">
+      <p className="break-words text-sm font-black uppercase tracking-[0.14em] text-[#22c55e] sm:tracking-[0.14em] sm:tracking-[0.22em]">
         {eyebrow}
       </p>
       <h2
-        className={`mt-4 text-4xl font-black tracking-tight sm:text-5xl ${
+        className={`mt-4 break-words text-4xl font-black tracking-tight sm:text-5xl ${
           inverted ? "text-white" : "text-black"
         }`}
       >
@@ -568,7 +601,7 @@ function PrimaryButton({
       href={href}
       target={href.startsWith("http") ? "_blank" : undefined}
       rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-      className={`inline-flex items-center justify-center gap-2 rounded-full px-7 py-4 text-base font-black transition hover:-translate-y-0.5 ${
+      className={`inline-flex w-full max-w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-center text-base font-black transition hover:-translate-y-0.5 sm:w-auto sm:px-7 ${
         dark
           ? "bg-black text-white shadow-[0_18px_45px_rgba(0,0,0,0.24)] hover:bg-zinc-900"
           : "bg-[#22c55e] text-black shadow-[0_18px_45px_rgba(34,197,94,0.26)] hover:bg-green-400"
@@ -584,7 +617,7 @@ function SecondaryButton({ children, href }: { children: React.ReactNode; href: 
   return (
     <a
       href={href}
-      className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-7 py-4 text-base font-black text-black transition hover:border-[#22c55e] hover:text-[#22c55e]"
+      className="inline-flex w-full max-w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-6 py-4 text-center text-base font-black text-black transition hover:border-[#22c55e] hover:text-[#22c55e] sm:w-auto sm:px-7"
     >
       {children}
     </a>
@@ -649,10 +682,10 @@ function RestaurantMarketplace() {
   }
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-2xl shadow-zinc-200">
+    <div className="max-w-full overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-2xl shadow-zinc-200 sm:p-5">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
+        <div className="min-w-0">
+          <p className="text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
             Restaurants à Douala
           </p>
           <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
@@ -667,20 +700,20 @@ function RestaurantMarketplace() {
         <button
           type="button"
           onClick={detectClientLocation}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-[#22c55e] hover:text-black sm:w-auto"
         >
           <PinIcon className="h-4 w-4" />
           Utiliser ma position
         </button>
       </div>
 
-      <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
+      <div className="mt-5 flex max-w-full flex-wrap gap-2 pb-2">
         {restaurantCategories.map((category) => (
           <button
             key={category}
             type="button"
             onClick={() => setSelectedCategory(category)}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-black transition ${
+            className={`rounded-full px-4 py-2 text-sm font-black transition ${
               selectedCategory === category
                 ? "bg-[#22c55e] text-black"
                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
@@ -697,7 +730,7 @@ function RestaurantMarketplace() {
         {filteredRestaurants.map((restaurant) => (
           <article
             key={restaurant.name}
-            className="rounded-lg border border-zinc-200 p-4 transition hover:border-[#22c55e] hover:shadow-lg"
+            className="min-w-0 rounded-lg border border-zinc-200 p-4 transition hover:border-[#22c55e] hover:shadow-lg"
           >
             <div className="relative mb-4 h-48 overflow-hidden rounded-lg bg-zinc-100">
               <div
@@ -712,9 +745,9 @@ function RestaurantMarketplace() {
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-2xl font-black">{restaurant.name}</h3>
+                  <h3 className="break-words text-2xl font-black">{restaurant.name}</h3>
                   <span className="rounded-full bg-[#22c55e]/15 px-3 py-1 text-xs font-black text-[#15803d]">
                     {restaurant.category}
                   </span>
@@ -731,7 +764,7 @@ function RestaurantMarketplace() {
                 </div>
               </div>
 
-              <div className="rounded-lg bg-black px-4 py-3 text-white sm:text-right">
+              <div className="w-full rounded-lg bg-black px-4 py-3 text-white sm:w-auto sm:min-w-32 sm:text-right">
                 <p className="text-sm font-black text-[#22c55e]">★ {restaurant.rating}</p>
                 <p className="mt-1 text-sm font-bold">{restaurant.deliveryTime}</p>
                 <p className="mt-1 text-sm font-bold">
@@ -742,8 +775,8 @@ function RestaurantMarketplace() {
 
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               {restaurant.menu.map((item) => (
-                <div key={item.name} className="flex items-center justify-between gap-3 rounded-lg bg-zinc-50 px-4 py-3">
-                  <p className="text-sm font-black">{item.name}</p>
+                <div key={item.name} className="flex min-w-0 items-center justify-between gap-3 rounded-lg bg-zinc-50 px-4 py-3">
+                  <p className="min-w-0 break-words text-sm font-black">{item.name}</p>
                   <p className="shrink-0 text-sm font-black text-[#16a34a]">{formatPrice(item.price)}</p>
                 </div>
               ))}
@@ -1039,7 +1072,7 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
             inputMode="numeric"
             maxLength={6}
             placeholder="000000"
-            className="rounded-lg border border-zinc-200 px-4 py-4 text-center text-2xl font-black tracking-[0.35em] outline-none transition focus:border-[#22c55e]"
+            className="w-full max-w-full rounded-lg border border-zinc-200 px-4 py-4 text-center text-2xl font-black tracking-[0.14em] sm:tracking-[0.24em] outline-none transition focus:border-[#22c55e] sm:tracking-[0.35em]"
           />
           {formMessage ? <p className="rounded-lg bg-zinc-100 p-3 text-sm font-semibold text-zinc-700">{formMessage}</p> : null}
           <button
@@ -1080,10 +1113,10 @@ function AccountAccess({ compact = false }: { compact?: boolean }) {
 function CampaignPanel() {
   return (
     <section id="campagne" className="bg-black px-5 py-20 text-white sm:px-8 lg:py-24">
-      <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-        <div>
+      <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div className="min-w-0">
           <LogoImage size="lg" priority surface="dark" />
-          <p className="mt-8 text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
+          <p className="mt-8 text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
             Campagne GOO Delivery
           </p>
           <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
@@ -1095,10 +1128,10 @@ function CampaignPanel() {
           </p>
         </div>
 
-        <div className="relative overflow-hidden rounded-lg border border-white/10 bg-white p-6 text-black shadow-2xl shadow-black/40">
+        <div className="relative max-w-full overflow-hidden rounded-lg border border-white/10 bg-white p-5 text-black shadow-2xl shadow-black/40 sm:p-6">
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[#22c55e]" />
           <div className="relative grid gap-6 md:grid-cols-[0.8fr_1fr] md:items-center">
-            <div>
+            <div className="min-w-0">
               <LogoImage size="lg" />
               <h3 className="mt-8 text-4xl font-black leading-tight">
                 Plus rapide.
@@ -1106,8 +1139,8 @@ function CampaignPanel() {
                 Toujours là.
               </h3>
             </div>
-            <div className="relative min-h-72">
-              <div className="absolute bottom-0 right-0 h-72 w-72">
+            <div className="relative min-h-64 sm:min-h-72">
+              <div className="absolute bottom-0 right-[-2rem] h-64 w-64 sm:right-0 sm:h-72 sm:w-72">
                 <RiderIllustration />
               </div>
             </div>
@@ -1307,10 +1340,10 @@ export default function Home() {
   const [accountOpen, setAccountOpen] = useState(false);
 
   return (
-    <main id="accueil" className="min-h-screen bg-white text-black">
+    <main id="accueil" className="min-h-screen overflow-x-hidden bg-white text-black">
       <nav className="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 sm:px-8">
-          <a href="#accueil" className="flex items-center gap-3" aria-label="GOO Delivery">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
+          <a href="#accueil" className="flex min-w-0 items-center gap-3" aria-label="GOO Delivery">
             <LogoImage size="sm" priority />
             <span className="hidden text-lg font-black tracking-tight sm:inline">
               GOO <span className="text-[#22c55e]">Delivery</span>
@@ -1368,13 +1401,13 @@ export default function Home() {
       ) : null}
 
       <section className="overflow-hidden bg-[linear-gradient(135deg,#ffffff_0%,#f4f4f5_45%,#0a0a0a_45%,#0a0a0a_100%)] px-5 py-14 sm:px-8 lg:py-20">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.94fr_1.06fr] lg:items-center">
-          <div>
+        <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-12 lg:grid-cols-[0.94fr_1.06fr] lg:items-center">
+          <div className="min-w-0">
             <LogoImage size="lg" priority />
-            <p className="mt-8 text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
+            <p className="mt-8 text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
               Plus rapide. Plus simple. Toujours là.
             </p>
-            <h1 className="mt-4 max-w-3xl text-5xl font-black leading-none tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="mt-4 max-w-3xl break-words text-4xl font-black leading-none tracking-tight min-[380px]:text-5xl sm:text-6xl lg:text-7xl">
               Restaurants de Douala livrés rapidement.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-700">
@@ -1387,7 +1420,7 @@ export default function Home() {
               <SecondaryButton href="#restaurants">Voir les restaurants</SecondaryButton>
             </div>
 
-            <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
+            <div className="mt-10 grid max-w-xl grid-cols-1 gap-3 sm:grid-cols-3">
               {stats.map((stat) => (
                 <div key={stat.label} className="border-l border-zinc-300 pl-4">
                   <p className="text-3xl font-black">{stat.value}</p>
@@ -1397,13 +1430,13 @@ export default function Home() {
             </div>
           </div>
 
-          <div id="restaurants" className="grid gap-5">
+          <div id="restaurants" className="grid min-w-0 gap-5">
             <RestaurantMarketplace />
           </div>
         </div>
       </section>
       <section id="services" className="px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto w-full max-w-7xl min-w-0">
           <SectionHeader
             eyebrow="Services"
             title="Toutes vos livraisons, dans une seule expérience."
@@ -1417,12 +1450,12 @@ export default function Home() {
               return (
                 <article
                   key={service.title}
-                  className="group rounded-lg border border-zinc-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-[#22c55e] hover:shadow-xl"
+                  className="group min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-[#22c55e] hover:shadow-xl sm:p-7"
                 >
                   <div className="grid h-14 w-14 place-items-center rounded-lg bg-black text-[#22c55e] transition group-hover:bg-[#22c55e] group-hover:text-black">
                     <Icon />
                   </div>
-                  <h3 className="mt-7 text-2xl font-black">{service.title}</h3>
+                  <h3 className="mt-7 break-words text-2xl font-black">{service.title}</h3>
                   <p className="mt-3 leading-7 text-zinc-600">{service.description}</p>
                 </article>
               );
@@ -1432,7 +1465,7 @@ export default function Home() {
       </section>
 
       <section id="fonctionnement" className="bg-black px-5 py-20 text-white sm:px-8 lg:py-24">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto w-full max-w-7xl min-w-0">
           <SectionHeader
             eyebrow="Comment ça marche"
             title="Trois étapes simples, une livraison maîtrisée."
@@ -1442,11 +1475,11 @@ export default function Home() {
 
           <div className="mt-14 grid gap-4 lg:grid-cols-3">
             {steps.map((step, index) => (
-              <article key={step.title} className="rounded-lg border border-white/10 bg-white/[0.04] p-7">
+              <article key={step.title} className="min-w-0 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-6 sm:p-7">
                 <span className="grid h-12 w-12 place-items-center rounded-lg bg-[#22c55e] text-xl font-black text-black">
                   {index + 1}
                 </span>
-                <h3 className="mt-7 text-2xl font-black">{step.title}</h3>
+                <h3 className="mt-7 break-words text-2xl font-black">{step.title}</h3>
                 <p className="mt-3 leading-7 text-zinc-300">{step.description}</p>
               </article>
             ))}
@@ -1454,8 +1487,120 @@ export default function Home() {
         </div>
       </section>
 
+      <section id="entreprises" className="w-full max-w-full overflow-hidden bg-white">
+        <div className="grid w-full min-w-0 max-w-full overflow-hidden lg:min-h-[610px] lg:grid-cols-[0.54fr_0.46fr]">
+          <div className="relative z-10 flex w-full min-w-0 max-w-full items-center overflow-hidden bg-black px-5 py-16 text-white sm:px-8 sm:py-20 lg:px-16 xl:px-24">
+            <div className="pointer-events-none absolute inset-y-0 -right-14 hidden w-28 skew-x-[-7deg] bg-black lg:block" />
+            <div className="relative w-full min-w-0 max-w-2xl">
+              <LogoImage size="md" surface="dark" />
+              <p className="mt-10 break-words text-sm font-black uppercase tracking-[0.14em] text-[#22c55e] sm:tracking-[0.24em]">
+                GOO Delivery pour entreprises
+              </p>
+              <h2 className="mt-5 break-words text-4xl font-black uppercase leading-[0.9] tracking-tight min-[380px]:text-5xl sm:text-6xl lg:text-7xl">
+                Livraisons flexibles
+                <span className="block text-[#22c55e]">à grande échelle</span>
+              </h2>
+              <p className="mt-7 max-w-xl text-lg font-semibold leading-8 text-zinc-200">
+                Une solution configurable pour nourrir vos équipes, servir vos clients et
+                fluidifier vos opérations à Douala avec un service professionnel.
+              </p>
+
+              <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+                <PrimaryButton href={businessWhatsappUrl}>Demander une solution</PrimaryButton>
+                <SecondaryButton href="#partenaires">Voir les partenaires</SecondaryButton>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="relative min-h-[420px] w-full min-w-0 max-w-full overflow-hidden bg-cover bg-center lg:min-h-full"
+            style={{
+              backgroundImage:
+                "linear-gradient(90deg, rgba(34,197,94,0.18), rgba(0,0,0,0.08)), url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1600&q=85')",
+            }}
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0)_35%,rgba(0,0,0,0.55)_100%)]" />
+            <div className="absolute bottom-5 left-5 right-5 grid min-w-0 gap-3 sm:left-auto sm:right-8 sm:w-80">
+              {enterpriseHighlights.map((highlight) => (
+                <div key={highlight} className="flex min-w-0 items-center gap-3 rounded-lg bg-white/95 p-4 shadow-2xl shadow-black/20 backdrop-blur">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#22c55e] text-black">
+                    <CheckIcon className="h-5 w-5" />
+                  </span>
+                  <p className="min-w-0 break-words font-black text-zinc-900">{highlight}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto w-full max-w-7xl overflow-hidden px-5 py-20 sm:px-8 lg:py-24">
+          <div className="grid min-w-0 gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+            <div
+              className="relative min-h-[330px] overflow-hidden rounded-lg bg-cover bg-center shadow-2xl shadow-zinc-200"
+              style={{
+                backgroundImage:
+                  "linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.62)), url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=85')",
+              }}
+            >
+              <div className="absolute inset-0 grid place-items-center">
+                <span className="grid h-20 w-20 place-items-center rounded-full bg-[#22c55e] text-black shadow-2xl shadow-black/30">
+                  <span className="ml-1 h-0 w-0 border-y-[14px] border-l-[22px] border-y-transparent border-l-black" />
+                </span>
+              </div>
+              <div className="absolute bottom-5 left-5 right-5 min-w-0 rounded-lg bg-white/95 p-4 backdrop-blur">
+                <p className="break-words text-sm font-black uppercase tracking-[0.12em] text-[#16a34a] sm:tracking-[0.18em]">
+                  Programme entreprise
+                </p>
+                <p className="mt-1 break-words text-base font-black text-black sm:text-xl">Bonamoussadi → Akwa → Bonapriso</p>
+              </div>
+            </div>
+
+            <div className="min-w-0">
+              <p className="break-words text-sm font-black uppercase tracking-[0.14em] text-[#22c55e] sm:tracking-[0.22em]">
+                Pensé pour les opérations
+              </p>
+              <h3 className="mt-4 max-w-3xl break-words text-3xl font-black uppercase leading-none tracking-tight text-black sm:text-5xl">
+                Le meilleur de GOO Delivery, conçu pour les entreprises.
+              </h3>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600">
+                GOO Delivery devient votre extension logistique : repas d&apos;équipe,
+                courses professionnelles, documents, colis et tournées récurrentes.
+                Vous gardez un contact direct sur WhatsApp et une exécution simple à suivre.
+              </p>
+
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                {enterpriseHighlights.map((highlight) => (
+                  <div key={highlight} className="flex min-w-0 items-center gap-3 rounded-lg border border-zinc-200 bg-white p-4">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black text-[#22c55e]">
+                      <CheckIcon className="h-5 w-5" />
+                    </span>
+                    <p className="min-w-0 break-words font-black">{highlight}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {enterpriseSolutions.map((solution) => {
+              const Icon = solution.Icon;
+
+              return (
+                <article key={solution.title} className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-[#22c55e] hover:shadow-xl">
+                  <div className="grid h-12 w-12 place-items-center rounded-lg bg-black text-[#22c55e]">
+                    <Icon />
+                  </div>
+                  <h3 className="mt-6 break-words text-xl font-black">{solution.title}</h3>
+                  <p className="mt-3 leading-7 text-zinc-600">{solution.description}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section className="px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto w-full max-w-7xl min-w-0">
           <SectionHeader
             eyebrow="Moyens de livraison"
             title="Le bon véhicule pour la bonne mission."
@@ -1467,16 +1612,16 @@ export default function Home() {
               const Icon = mode.Icon;
 
               return (
-                <article key={mode.title} className="rounded-lg bg-zinc-950 p-7 text-white shadow-xl shadow-zinc-200 transition hover:-translate-y-1">
-                  <div className="flex items-center justify-between gap-4">
+                <article key={mode.title} className="min-w-0 overflow-hidden rounded-lg bg-zinc-950 p-6 text-white shadow-xl shadow-zinc-200 transition hover:-translate-y-1 sm:p-7">
+                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-4">
                     <div className="grid h-14 w-14 place-items-center rounded-lg bg-[#22c55e] text-black">
                       <Icon />
                     </div>
-                    <span className="rounded-full border border-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#22c55e]">
+                    <span className="min-w-0 max-w-full break-words rounded-full border border-white/10 px-3 py-1 text-right text-xs font-black uppercase leading-5 tracking-[0.12em] text-[#22c55e] sm:tracking-[0.16em]">
                       {mode.subtitle}
                     </span>
                   </div>
-                  <h3 className="mt-8 text-3xl font-black">{mode.title}</h3>
+                  <h3 className="mt-8 break-words text-3xl font-black">{mode.title}</h3>
                   <p className="mt-4 leading-7 text-zinc-300">{mode.description}</p>
                 </article>
               );
@@ -1488,9 +1633,9 @@ export default function Home() {
       <CampaignPanel />
 
       <section id="partenaires" className="px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
+        <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="min-w-0">
+            <p className="text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
               Partenaires
             </p>
             <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
@@ -1507,11 +1652,11 @@ export default function Home() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {partners.map((partner) => (
-              <div key={partner} className="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-[#22c55e] hover:shadow-lg">
-                <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#22c55e] text-black">
+              <div key={partner} className="flex min-w-0 items-center gap-4 overflow-hidden rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-[#22c55e] hover:shadow-lg">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#22c55e] text-black">
                   <CheckIcon />
                 </span>
-                <p className="text-xl font-black">{partner}</p>
+                <p className="min-w-0 break-words text-xl font-black">{partner}</p>
               </div>
             ))}
           </div>
@@ -1519,7 +1664,7 @@ export default function Home() {
       </section>
 
       <section className="bg-zinc-50 px-5 py-20 sm:px-8 lg:py-24">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto w-full max-w-7xl min-w-0">
           <SectionHeader
             eyebrow="Avantages"
             title="Une expérience pensée pour la confiance."
@@ -1531,11 +1676,11 @@ export default function Home() {
               const Icon = advantage.Icon;
 
               return (
-                <article key={advantage.title} className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+                <article key={advantage.title} className="min-w-0 overflow-hidden rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
                   <div className="grid h-12 w-12 place-items-center rounded-lg bg-black text-[#22c55e]">
                     <Icon />
                   </div>
-                  <h3 className="mt-6 text-2xl font-black">{advantage.title}</h3>
+                  <h3 className="mt-6 break-words text-2xl font-black">{advantage.title}</h3>
                   <p className="mt-3 leading-7 text-zinc-600">{advantage.description}</p>
                 </article>
               );
@@ -1546,8 +1691,8 @@ export default function Home() {
 
       <section className="px-5 py-20 sm:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl overflow-hidden rounded-lg bg-[linear-gradient(135deg,#22c55e_0%,#22c55e_48%,#050505_48%,#050505_100%)] p-8 text-black sm:p-12 lg:p-14">
-          <div className="grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
-            <div>
+          <div className="grid min-w-0 gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
+            <div className="min-w-0">
               <LogoImage size="lg" />
               <h2 className="mt-8 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
                 Prêt à commander ?
@@ -1566,9 +1711,9 @@ export default function Home() {
       </section>
 
       <section id="contact" className="bg-black px-5 py-20 text-white sm:px-8 lg:py-24">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#22c55e]">
+        <div className="mx-auto grid w-full max-w-7xl min-w-0 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="min-w-0">
+            <p className="text-sm font-black uppercase tracking-[0.14em] sm:tracking-[0.22em] text-[#22c55e]">
               Contact
             </p>
             <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">
@@ -1580,14 +1725,14 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-4">
-            <a className="rounded-lg border border-white/10 bg-white/[0.04] p-6 transition hover:border-[#22c55e]" href="tel:+237695502710">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#22c55e]">WhatsApp</p>
-              <p className="mt-3 text-2xl font-black">{whatsappNumber}</p>
+          <div className="grid min-w-0 gap-4">
+            <a className="min-w-0 rounded-lg border border-white/10 bg-white/[0.04] p-5 transition hover:border-[#22c55e] sm:p-6" href="tel:+237695502710">
+              <p className="text-sm font-black uppercase tracking-[0.12em] sm:tracking-[0.18em] text-[#22c55e]">WhatsApp</p>
+              <p className="mt-3 break-words text-xl font-black sm:text-2xl">{whatsappNumber}</p>
             </a>
-            <a className="rounded-lg border border-white/10 bg-white/[0.04] p-6 transition hover:border-[#22c55e]" href={`mailto:${email}`}>
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#22c55e]">Email</p>
-              <p className="mt-3 text-2xl font-black">{email}</p>
+            <a className="min-w-0 rounded-lg border border-white/10 bg-white/[0.04] p-5 transition hover:border-[#22c55e] sm:p-6" href={`mailto:${email}`}>
+              <p className="text-sm font-black uppercase tracking-[0.12em] sm:tracking-[0.18em] text-[#22c55e]">Email</p>
+              <p className="mt-3 break-all text-xl font-black sm:text-2xl">{email}</p>
             </a>
             <PrimaryButton href={whatsappUrl}>Lien direct WhatsApp</PrimaryButton>
           </div>
@@ -1596,9 +1741,9 @@ export default function Home() {
 
       <footer className="border-t border-zinc-200 px-5 py-8 sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 text-sm text-zinc-500 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <LogoImage size="sm" />
-            <div>
+            <div className="min-w-0">
               <p className="font-black text-black">GOO Delivery</p>
               <p>© 2026 GOO Delivery. Tous droits réservés.</p>
             </div>
